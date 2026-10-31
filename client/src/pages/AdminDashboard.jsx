@@ -22,7 +22,8 @@ import {
   Eye,
   Palette,
   Zap,
-  Tag
+  Tag,
+  LogOut,
 } from 'lucide-react';
 import { mockProducts as initialProducts } from '../data/mockProducts';
 
@@ -36,7 +37,7 @@ const DEAL_TAG_OPTIONS = [
   'Top Rated Items'
 ];
 
-export default function AdminDashboard() {
+export default function AdminDashboard({ onLogout }) {
   const navigate = useNavigate();
 
   const [activeTab, setActiveTab] = useState('overview');
@@ -447,11 +448,14 @@ export default function AdminDashboard() {
 
         <div className="pt-6 border-t border-gray-100 mt-6">
           <button
-            onClick={() => navigate('/')}
-            className="w-full py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold rounded-xl transition flex items-center justify-center gap-1.5 cursor-pointer"
+            onClick={() => {
+              if (onLogout) onLogout();
+              navigate('/login');
+            }}
+            className="w-full py-2.5 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 text-xs font-bold rounded-xl transition flex items-center justify-center gap-2 cursor-pointer"
           >
-            <span>Exit to Storefront</span>
-            <ChevronRight size={14} />
+            <LogOut size={15} />
+            <span>Sign Out</span>
           </button>
         </div>
       </aside>

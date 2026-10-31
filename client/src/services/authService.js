@@ -59,6 +59,22 @@ export const authService = {
   isAuthenticated() {
     return !!localStorage.getItem('token');
   },
+
+  // Helper to check if current logged-in user is an admin
+  isAdmin() {
+    const user = this.getStoredUser();
+    return !!(user && user.role === 'admin');
+  },
+
+  // Verify admin status from the server
+  async checkAdmin() {
+    try {
+      const response = await API.get('/auth/check-admin');
+      return response.data?.success === true;
+    } catch {
+      return false;
+    }
+  },
 };
 
 export default authService;

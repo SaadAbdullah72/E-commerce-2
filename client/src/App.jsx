@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Routes, Route, useNavigate, useParams, Navigate, useLocation } from 'react-router-dom';
 import Navbar from './components/layout/Navbar';
 import HomePage from './pages/HomePage';
@@ -18,6 +18,16 @@ import authService from './services/authService';
 function ProtectedRoute({ children, isLoggedIn }) {
   if (!isLoggedIn) {
     return <Navigate to="/login?redirect=shipping" replace />;
+  }
+  return children;
+}
+
+function AdminRoute({ children, isLoggedIn }) {
+  if (!isLoggedIn) {
+    return <Navigate to="/login" replace />;
+  }
+  if (!authService.isAdmin()) {
+    return <Navigate to="/" replace />;
   }
   return children;
 }
@@ -65,6 +75,14 @@ export default function App() {
 
   // Check if current route is under the admin dashboard
   const isAdminRoute = location.pathname.startsWith('/admin');
+  const isAdmin = authService.isAdmin();
+
+  // If logged in as admin, force direct access to /admin dashboard (admin cannot shop)
+  useEffect(() => {
+    if (isLoggedIn && isAdmin && !location.pathname.startsWith('/admin')) {
+      navigate('/admin', { replace: true });
+    }
+  }, [isLoggedIn, isAdmin, location.pathname, navigate]);
 
   const handleSelectCategory = (catName) => {
     if (!catName) {
@@ -91,8 +109,8 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900">
-      {/* Conditionally render Navbar ONLY on storefront routes */}
-      {!isAdminRoute && (
+      {/* Conditionally render Navbar ONLY on storefront routes and for non-admins */}
+      {!isAdminRoute && !isAdmin && (
         <Navbar onSelectCategory={handleSelectCategory} />
       )}
 
@@ -156,11 +174,18 @@ export default function App() {
           }
         />
 
-        <Route path="/admin" element={<AdminDashboard />} />
+        <Route 
+          path="/admin" 
+          element={
+            <AdminRoute isLoggedIn={isLoggedIn}>
+              <AdminDashboard onLogout={handleLogout} />
+            </AdminRoute>
+          } 
+        />
       </Routes>
 
-      {/* Conditionally render CartDrawer ONLY on storefront routes */}
-      {!isAdminRoute && (
+      {/* Conditionally render CartDrawer ONLY on storefront routes and for non-admins */}
+      {!isAdminRoute && !isAdmin && (
         <CartDrawer
           onCheckout={() => navigate(isLoggedIn ? '/shipping' : '/login?redirect=shipping')}
         />

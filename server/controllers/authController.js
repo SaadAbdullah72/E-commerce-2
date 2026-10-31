@@ -214,9 +214,45 @@ async function updateProfile(req, res) {
   }
 }
 
+// POST /api/auth/make-admin
+async function makeAdmin(req, res) {
+  try {
+    const { email, adminSecret } = req.body;
+    const expectedSecret = process.env.ADMIN_SECRET || 'shopyaro_admin_secret_2026';
+
+    if (adminSecret !== expectedSecret && process.env.NODE_ENV !== 'development') {
+      return res.status(403).json({ success: false, message: 'Invalid admin secret.' });
+    }
+
+    const targetEmail = (email || '').trim().toLowerCase();
+    if (!targetEmail) {
+      return res.status(400).json({ success: false, message: 'User email is required.' });
+    }
+
+    const result = await db.query(
+      "UPDATE users SET role = 'admin', updated_at = CURRENT_TIMESTAMP WHERE LOWER(email) = LOWER($1) RETURNING id, name, email, role",
+      [targetEmail]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ success: false, message: 'User not found with this email.' });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: `User ${targetEmail} is now an Admin!`,
+      user: result.rows[0],
+    });
+  } catch (error) {
+    console.error('Error making admin:', error);
+    return res.status(500).json({ success: false, message: 'Server error making user admin.' });
+  }
+}
+
 module.exports = {
   signup,
   login,
   getMe,
   updateProfile,
+  makeAdmin,
 };

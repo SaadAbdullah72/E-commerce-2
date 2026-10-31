@@ -34,8 +34,10 @@ export default function LoginPage({ onLoginSuccess }) {
       // Authenticate user in app state
       if (onLoginSuccess) onLoginSuccess(true, res.user);
 
-      // Redirect conditionally: To shipping if user was checking out, otherwise to Home page
-      if (redirectTo) {
+      // If user is admin, directly go to admin dashboard!
+      if (res.user?.role === 'admin') {
+        navigate('/admin', { replace: true });
+      } else if (redirectTo) {
         navigate(`/${redirectTo}`);
       } else {
         navigate('/');
