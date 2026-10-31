@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
-import { Lock, Mail, ArrowRight, ShieldCheck, CheckCircle2 } from 'lucide-react';
+import { Lock, Mail, ArrowRight, ShieldCheck, CheckCircle2, Loader2 } from 'lucide-react';
+import authService from '../services/authService';
 
 export default function LoginPage({ onLoginSuccess }) {
   const navigate = useNavigate();
@@ -12,22 +13,38 @@ export default function LoginPage({ onLoginSuccess }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!email || !password) {
+    setError('');
+
+    if (!email.trim() || !password) {
       setError('Please fill in all fields.');
       return;
     }
 
-    // Authenticate user
-    if (onLoginSuccess) onLoginSuccess(true);
+    try {
+      setIsLoading(true);
+      const res = await authService.login({
+        email: email.trim(),
+        password,
+      });
 
-    // Redirect conditionally: To shipping if user was checking out, otherwise to Home page
-    if (redirectTo) {
-      navigate(`/${redirectTo}`);
-    } else {
-      navigate('/');
+      // Authenticate user in app state
+      if (onLoginSuccess) onLoginSuccess(true, res.user);
+
+      // Redirect conditionally: To shipping if user was checking out, otherwise to Home page
+      if (redirectTo) {
+        navigate(`/${redirectTo}`);
+      } else {
+        navigate('/');
+      }
+    } catch (err) {
+      const serverMessage = err.response?.data?.message || err.message || 'Login failed. Please check your credentials or database server.';
+      setError(serverMessage);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -94,9 +111,20 @@ export default function LoginPage({ onLoginSuccess }) {
 
           <button
             type="submit"
-            className="w-full py-3 bg-orange-500 hover:bg-orange-600 text-white font-bold text-xs rounded-xl transition shadow-xs flex items-center justify-center gap-2 mt-2"
+            disabled={isLoading}
+            className="w-full py-3 bg-orange-500 hover:bg-orange-600 disabled:opacity-60 text-white font-bold text-xs rounded-xl transition shadow-xs flex items-center justify-center gap-2 mt-2 cursor-pointer disabled:cursor-not-allowed"
           >
-            Sign In <ArrowRight size={14} />
+            {isLoading ? (
+              <>
+                <Loader2 size={16} className="animate-spin" />
+                <span>Signing In...</span>
+              </>
+            ) : (
+              <>
+                <span>Sign In</span>
+                <ArrowRight size={14} />
+              </>
+            )}
           </button>
         </form>
 

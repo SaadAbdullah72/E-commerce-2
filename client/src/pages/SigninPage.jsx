@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
-import { UserPlus, Mail, Lock, User, ArrowRight, ShieldCheck } from 'lucide-react';
+import { UserPlus, Mail, Lock, User, ArrowRight, ShieldCheck, Loader2 } from 'lucide-react';
+import authService from '../services/authService';
 
-export default function SigninPage() {
+export default function SigninPage({ onRegisterSuccess }) {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const redirectTo = searchParams.get('redirect') || '';
@@ -11,24 +12,45 @@ export default function SigninPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!name || !email || !password) {
+    setError('');
+
+    if (!name.trim() || !email.trim() || !password) {
       setError('Please fill in all required fields.');
       return;
     }
 
-    // BACKEND INTEGRATION NOTE:
-    // Call your friend's registration API endpoint here:
-    // await fetch(`${import.meta.env.VITE_API_BASE_URL}/auth/register`, { method: 'POST', body: JSON.stringify({ name, email, password }) });
+    if (password.length < 6) {
+      setError('Password must be at least 6 characters long.');
+      return;
+    }
 
-    // Navigate to Login Page with success notification flag & optional checkout redirect
-    const loginUrl = redirectTo 
-      ? `/login?redirect=${redirectTo}&registered=true` 
-      : '/login?registered=true';
+    try {
+      setIsLoading(true);
+      const res = await authService.signup({
+        name: name.trim(),
+        email: email.trim(),
+        password,
+      });
 
-    navigate(loginUrl);
+      if (onRegisterSuccess) {
+        onRegisterSuccess(true, res.user);
+      }
+
+      const loginUrl = redirectTo 
+        ? `/login?redirect=${redirectTo}&registered=true` 
+        : '/login?registered=true';
+
+      navigate(loginUrl);
+    } catch (err) {
+      const serverMessage = err.response?.data?.message || err.message || 'Registration failed. Please check your network or server.';
+      setError(serverMessage);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -103,9 +125,20 @@ export default function SigninPage() {
 
           <button
             type="submit"
-            className="w-full py-3 bg-orange-500 hover:bg-orange-600 text-white font-bold text-xs rounded-xl transition shadow-xs flex items-center justify-center gap-2 mt-2"
+            disabled={isLoading}
+            className="w-full py-3 bg-orange-500 hover:bg-orange-600 disabled:opacity-60 text-white font-bold text-xs rounded-xl transition shadow-xs flex items-center justify-center gap-2 mt-2 cursor-pointer disabled:cursor-not-allowed"
           >
-            Create Account <ArrowRight size={14} />
+            {isLoading ? (
+              <>
+                <Loader2 size={16} className="animate-spin" />
+                <span>Creating Account...</span>
+              </>
+            ) : (
+              <>
+                <span>Create Account</span>
+                <ArrowRight size={14} />
+              </>
+            )}
           </button>
         </form>
 

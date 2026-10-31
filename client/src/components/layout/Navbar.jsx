@@ -152,9 +152,21 @@ export default function Navbar({ onSearch, onSelectCategory }) {
 
         {/* User & Cart Actions */}
         <div className="flex items-center space-x-6">
-          <button onClick={() => navigate('/profile')} className="flex flex-col items-center text-gray-700 hover:text-blue-600 transition group cursor-pointer">
+          <button 
+            onClick={() => navigate(localStorage.getItem('token') ? '/profile' : '/login')} 
+            className="flex flex-col items-center text-gray-700 hover:text-blue-600 transition group cursor-pointer"
+          >
             <User size={22} className="group-hover:scale-110 transition-transform" />
-            <span className="text-[11px] font-bold mt-0.5">Account</span>
+            <span className="text-[11px] font-bold mt-0.5 max-w-[70px] truncate">
+              {(() => {
+                try {
+                  const u = JSON.parse(localStorage.getItem('user'));
+                  return u?.name ? u.name.split(' ')[0] : (localStorage.getItem('token') ? 'Profile' : 'Sign In');
+                } catch {
+                  return 'Sign In';
+                }
+              })()}
+            </span>
           </button>
 
           <button

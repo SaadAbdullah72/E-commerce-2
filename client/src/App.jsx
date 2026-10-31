@@ -13,6 +13,7 @@ import { mockProducts } from './data/mockProducts';
 import ProfilePage from './pages/ProfilePage';
 import MyOrdersPage from './pages/MyOrdersPage';
 import AdminDashboard from './pages/AdminDashboard';
+import authService from './services/authService';
 
 function ProtectedRoute({ children, isLoggedIn }) {
   if (!isLoggedIn) {
@@ -54,8 +55,13 @@ function ProductDetailRouteWrapper({ isLoggedIn }) {
 export default function App() {
   const navigate = useNavigate();
   const location = useLocation();
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(() => authService.isAuthenticated());
   const [selectedCategory, setSelectedCategory] = useState(null);
+
+  const handleLogout = () => {
+    authService.logout();
+    setIsLoggedIn(false);
+  };
 
   // Check if current route is under the admin dashboard
   const isAdminRoute = location.pathname.startsWith('/admin');
@@ -110,7 +116,7 @@ export default function App() {
           path="/profile"
           element={
             <ProtectedRoute isLoggedIn={isLoggedIn}>
-              <ProfilePage onLogout={() => setIsLoggedIn(false)} />
+              <ProfilePage onLogout={handleLogout} />
             </ProtectedRoute>
           }
         />

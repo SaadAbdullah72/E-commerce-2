@@ -1,29 +1,59 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { User, Mail, Phone, MapPin, Package, LogOut, Save, CheckCircle2, ShieldCheck } from 'lucide-react';
+import authService from '../services/authService';
 
 export default function ProfilePage({ onLogout }) {
   const navigate = useNavigate();
   const [saved, setSaved] = useState(false);
+  const [error, setError] = useState('');
 
-  const [formData, setFormData] = useState({
-    name: 'Huzaifa Javid',
-    email: 'huzaifa@gmail.com',
-    phone: '+92 300 1234567',
-    address: 'House 12, Street 4, Sector F-8/1',
-    city: 'Islamabad',
-    zipCode: '44000',
-    country: 'Pakistan',
+  const [formData, setFormData] = useState(() => {
+    const stored = authService.getStoredUser();
+    return {
+      name: stored?.name || 'Customer',
+      email: stored?.email || '',
+      phone: stored?.phone || '',
+      address: stored?.address || '',
+      city: stored?.city || '',
+      zipCode: stored?.zip_code || '',
+      country: stored?.country || '',
+    };
   });
+
+  useEffect(() => {
+    // Refresh user details from server
+    authService.getMe().then((user) => {
+      if (user) {
+        setFormData({
+          name: user.name || '',
+          email: user.email || '',
+          phone: user.phone || '',
+          address: user.address || '',
+          city: user.city || '',
+          zipCode: user.zip_code || '',
+          country: user.country || '',
+        });
+      }
+    }).catch(() => {
+      // If fetching fails or offline, keep stored local values
+    });
+  }, []);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setSaved(true);
-    setTimeout(() => setSaved(false), 3000);
+    setError('');
+    try {
+      await authService.updateProfile(formData);
+      setSaved(true);
+      setTimeout(() => setSaved(false), 3000);
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to update profile.');
+    }
   };
 
   return (
@@ -55,9 +85,9 @@ export default function ProfilePage({ onLogout }) {
           <div className="lg:col-span-4 space-y-4">
             <div className="bg-white border border-gray-200 rounded-2xl p-6 text-center shadow-xs">
               <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center font-black text-xl mx-auto mb-3 border border-blue-100">
-                HJ
+                {formData.name ? formData.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : 'U'}
               </div>
-              <h2 className="text-base font-bold text-gray-900">{formData.name}</h2>
+              <h2 className="text-base font-bold text-gray-900">{formData.name || 'User'}</h2>
               <p className="text-xs text-gray-500 mt-0.5">{formData.email}</p>
 
               <div className="mt-4 pt-4 border-t border-gray-100 flex items-center justify-center gap-1.5 text-[11px] font-bold text-emerald-600">
@@ -90,7 +120,11 @@ export default function ProfilePage({ onLogout }) {
 
           {/* Profile Form Content */}
           <div className="lg:col-span-8 bg-white border border-gray-200 rounded-2xl p-6 sm:p-8 shadow-xs">
-            
+            {error && (
+              <div className="mb-4 bg-red-50 border border-red-200 text-red-600 text-xs p-3 rounded-xl font-medium">
+                {error}
+              </div>
+            )}
 
             <form onSubmit={handleSubmit} className="space-y-6">
               
