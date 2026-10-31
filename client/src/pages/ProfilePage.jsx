@@ -57,11 +57,11 @@ export default function ProfilePage({ onLogout }) {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
+    <div className="min-h-screen bg-gray-50 pb-20 font-sans">
       <div className="max-w-5xl mx-auto px-4 py-8">
         
-        {/* Header Bar */}
-        <div className="flex items-center justify-between mb-8">
+        {/* Header Bar - Mobile Friendly Flex-Col to Row */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
           <div>
             <h1 className="text-xl sm:text-2xl font-black text-gray-900 tracking-tight">Account Settings</h1>
             <p className="text-xs text-gray-500 mt-1">Manage your personal details, default shipping address, and order tracking.</p>
@@ -72,7 +72,7 @@ export default function ProfilePage({ onLogout }) {
               if (onLogout) onLogout();
               navigate('/login');
             }}
-            className="flex items-center gap-1.5 px-3.5 py-2 border border-red-200 text-red-600 hover:bg-red-50 rounded-xl text-xs font-bold transition cursor-pointer"
+            className="self-start sm:self-auto flex items-center gap-1.5 px-3.5 py-2 border border-red-200 text-red-600 hover:bg-red-50 rounded-xl text-xs font-bold transition cursor-pointer"
           >
             <LogOut size={14} />
             <span>Sign Out</span>
@@ -88,7 +88,7 @@ export default function ProfilePage({ onLogout }) {
                 {formData.name ? formData.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : 'U'}
               </div>
               <h2 className="text-base font-bold text-gray-900">{formData.name || 'User'}</h2>
-              <p className="text-xs text-gray-500 mt-0.5">{formData.email}</p>
+              <p className="text-xs text-gray-500 mt-0.5 break-all">{formData.email}</p>
 
               <div className="mt-4 pt-4 border-t border-gray-100 flex items-center justify-center gap-1.5 text-[11px] font-bold text-emerald-600">
                 <ShieldCheck size={14} />
@@ -96,7 +96,6 @@ export default function ProfilePage({ onLogout }) {
               </div>
             </div>
             
-
             <div className="bg-white border border-gray-200 rounded-2xl p-2 shadow-xs space-y-1">
               <Link
                 to="/orders"
@@ -136,7 +135,7 @@ export default function ProfilePage({ onLogout }) {
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
+                  <div className="sm:col-span-2">
                     <label className="block text-xs font-bold text-gray-700 mb-1">Full Name</label>
                     <input
                       type="text"
@@ -230,22 +229,22 @@ export default function ProfilePage({ onLogout }) {
                 </div>
               </div>
 
-          {/* Submit Action */}
-<div className="pt-4 border-t border-gray-100 flex items-center justify-end gap-3">
-  {saved && (
-    <div className="flex items-center gap-1.5 text-xs font-semibold text-emerald-600 animate-fade-in">
-      <CheckCircle2 size={15} className="shrink-0" />
-      <span>Changes saved</span>
-    </div>
-  )}
+              {/* Submit Action */}
+              <div className="pt-4 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-end gap-3">
+                {saved && (
+                  <div className="flex items-center gap-1.5 text-xs font-semibold text-emerald-600 animate-fade-in order-2 sm:order-1">
+                    <CheckCircle2 size={15} className="shrink-0" />
+                    <span>Changes saved</span>
+                  </div>
+                )}
 
-  <button
-    type="submit"
-    className="px-6 py-2.5 bg-orange-500 hover:bg-orange-600 text-white font-bold text-xs rounded-xl transition shadow-xs flex items-center justify-center gap-2 cursor-pointer active:scale-[0.99]"
-  >
-    <Save size={14} /> Save Profile Changes
-  </button>
-</div>
+                <button
+                  type="submit"
+                  className="w-full sm:w-auto px-6 py-2.5 bg-orange-500 hover:bg-orange-600 text-white font-bold text-xs rounded-xl transition shadow-xs flex items-center justify-center gap-2 cursor-pointer active:scale-[0.99] order-1 sm:order-2"
+                >
+                  <Save size={14} /> Save Profile Changes
+                </button>
+              </div>
 
             </form>
           </div>

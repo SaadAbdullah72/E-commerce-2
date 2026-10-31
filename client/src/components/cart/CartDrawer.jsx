@@ -17,7 +17,7 @@ export default function CartDrawer({ onCheckout }) {
     selectedItemsCount,
   } = useCart();
 
-  // Prevent background page body scroll while drawer is open (prevents layout shift)
+  // Prevent background page body scroll while drawer is open
   useEffect(() => {
     if (isCartOpen) {
       document.body.style.overflow = 'hidden';
@@ -35,17 +35,17 @@ export default function CartDrawer({ onCheckout }) {
   const isAllSelected = cart.length > 0 && cart.every((item) => item.selected);
 
   return (
-    <div className="fixed inset-0 z-50 overflow-hidden">
+    <div className="fixed inset-0 z-50 overflow-hidden font-sans">
       {/* Blurred & Dimmed Backdrop */}
       <div
         onClick={() => setIsCartOpen(false)}
-        className="fixed inset-0 bg-black/40 backdrop-blur-sm transition-opacity duration-300 ease-in-out cursor-pointer"
+        className="fixed inset-0 bg-black/40 backdrop-blur-xs transition-opacity duration-300 ease-in-out cursor-pointer"
         aria-hidden="true"
       />
 
-      {/* Drawer Container */}
-      <div className="fixed inset-y-0 right-0 max-w-full flex pl-10 pointer-events-none">
-        <div className="w-screen max-w-md bg-white border-l border-gray-200 shadow-2xl flex flex-col pointer-events-auto transform transition-transform duration-300 ease-in-out">
+      {/* Drawer Container - Full Width on Mobile (w-full / pl-0), Fixed Width on Desktop (sm:max-w-md / sm:pl-10) */}
+      <div className="fixed inset-y-0 right-0 max-w-full flex pl-0 sm:pl-10 pointer-events-none">
+        <div className="w-full sm:w-md sm:max-w-md bg-white border-l border-gray-200 shadow-2xl flex flex-col pointer-events-auto transform transition-transform duration-300 ease-in-out">
           
           {/* Header */}
           <div className="p-4 border-b border-gray-100 flex items-center justify-between bg-white shrink-0">
@@ -56,9 +56,9 @@ export default function CartDrawer({ onCheckout }) {
             </div>
             <button
               onClick={() => setIsCartOpen(false)}
-              className="p-1 rounded-md text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition cursor-pointer"
+              className="p-1.5 rounded-md text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition cursor-pointer"
             >
-              <X size={18} />
+              <X size={20} />
             </button>
           </div>
 
@@ -82,12 +82,12 @@ export default function CartDrawer({ onCheckout }) {
             </div>
           )}
 
-          {/* Cart Items List (Prevent Layout Shifts) */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-4 min-h-0 custom-scrollbar">
+          {/* Cart Items List */}
+          <div className="flex-1 overflow-y-auto p-4 space-y-4 min-h-0 overscroll-contain">
             {cart.length > 0 ? (
               cart.map((item, idx) => {
                 const itemUnitPrice = Number(item.price) || 0;
-                const itemLineTotal = itemUnitPrice * item.quantity;
+                const itemLineTotal = itemUnitPrice * (item.quantity || 1);
 
                 return (
                   <div
@@ -99,7 +99,7 @@ export default function CartDrawer({ onCheckout }) {
                     {/* Item Selection Checkbox */}
                     <button
                       onClick={() => toggleSelectItem(item._id, item.variant)}
-                      className="mt-5 text-gray-400 hover:text-blue-600 transition cursor-pointer shrink-0"
+                      className="mt-4 p-1 text-gray-400 hover:text-blue-600 transition cursor-pointer shrink-0"
                     >
                       {item.selected ? (
                         <CheckSquare size={18} className="text-blue-600" />
@@ -109,7 +109,7 @@ export default function CartDrawer({ onCheckout }) {
                     </button>
 
                     {/* Thumbnail */}
-                    <div className="w-16 h-16 bg-gray-50 rounded-md border border-gray-200 shrink-0 p-1 flex items-center justify-center">
+                    <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gray-50 rounded-md border border-gray-200 shrink-0 p-1 flex items-center justify-center">
                       <img
                         src={item.images?.[0] || item.image || 'https://via.placeholder.com/150'}
                         alt={item.title || item.name}
@@ -130,15 +130,15 @@ export default function CartDrawer({ onCheckout }) {
                             </span>
                           )}
                           <span className="text-xs font-medium text-gray-500 block mt-0.5">
-                            ${itemUnitPrice.toFixed(2)} each
+                            ₦{itemUnitPrice.toLocaleString()} each
                           </span>
                         </div>
 
                         <button
                           onClick={() => removeFromCart(item._id, item.variant)}
-                          className="text-gray-400 hover:text-red-500 transition p-0.5 cursor-pointer shrink-0"
+                          className="text-gray-400 hover:text-red-500 transition p-1 cursor-pointer shrink-0"
                         >
-                          <Trash2 size={14} />
+                          <Trash2 size={15} />
                         </button>
                       </div>
 
@@ -147,7 +147,7 @@ export default function CartDrawer({ onCheckout }) {
                         <div className="flex items-center border border-gray-200 rounded bg-gray-50 shrink-0">
                           <button
                             onClick={() => updateQuantity(item._id, item.variant, -1)}
-                            className="px-2 py-1 text-gray-600 hover:bg-gray-200 transition cursor-pointer"
+                            className="p-1.5 sm:px-2 text-gray-600 hover:bg-gray-200 transition cursor-pointer"
                           >
                             <Minus size={12} />
                           </button>
@@ -156,7 +156,7 @@ export default function CartDrawer({ onCheckout }) {
                           </span>
                           <button
                             onClick={() => updateQuantity(item._id, item.variant, 1)}
-                            className="px-2 py-1 text-gray-600 hover:bg-gray-200 transition cursor-pointer"
+                            className="p-1.5 sm:px-2 text-gray-600 hover:bg-gray-200 transition cursor-pointer"
                           >
                             <Plus size={12} />
                           </button>
@@ -164,7 +164,7 @@ export default function CartDrawer({ onCheckout }) {
 
                         {/* Line Total */}
                         <span className="text-xs font-black text-gray-900 shrink-0">
-                          ${itemLineTotal.toFixed(2)}
+                          ₦{itemLineTotal.toLocaleString()}
                         </span>
                       </div>
                     </div>
@@ -185,7 +185,7 @@ export default function CartDrawer({ onCheckout }) {
             <div className="p-4 border-t border-gray-100 bg-gray-50/80 backdrop-blur-xs space-y-3 shrink-0">
               <div className="flex items-center justify-between text-xs font-bold text-gray-900">
                 <span>Selected Subtotal ({selectedItemsCount} items)</span>
-                <span className="text-sm font-black text-blue-600">${totalPrice.toFixed(2)}</span>
+                <span className="text-sm font-black text-blue-600">₦{totalPrice.toLocaleString()}</span>
               </div>
               <p className="text-[10px] text-gray-400">Shipping and taxes calculated at checkout.</p>
 
@@ -195,7 +195,7 @@ export default function CartDrawer({ onCheckout }) {
                   setIsCartOpen(false);
                   if (onCheckout) onCheckout();
                 }}
-                className={`w-full py-2.5 font-bold text-xs rounded-lg transition flex items-center justify-center gap-1.5 shadow-xs ${
+                className={`w-full py-3 font-bold text-xs rounded-lg transition flex items-center justify-center gap-1.5 shadow-xs ${
                   selectedCart.length > 0
                     ? 'bg-orange-500 hover:bg-orange-600 text-white cursor-pointer active:scale-[0.99]'
                     : 'bg-gray-300 text-gray-500 cursor-not-allowed'
