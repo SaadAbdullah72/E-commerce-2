@@ -18,7 +18,6 @@ import ResetPasswordPage from './features/auth/pages/ResetPasswordPage';
 import SignupPage from './features/auth/pages/SignupPage';
 import PrivacyPage from './features/legal/pages/PrivacyPage';
 import TermsPage from './features/legal/pages/TermsPage';
-import { mockProducts } from './data/mockProducts';
 import ProfilePage from './pages/ProfilePage';
 import MyOrdersPage from './pages/MyOrdersPage';
 import AdminDashboard from './pages/AdminDashboard';
@@ -36,23 +35,7 @@ function CategoryRouteWrapper() {
   return (
     <CategoryPage
       categoryName={categoryName}
-      onSelectProduct={(product) => navigate(`/product/${product._id}`)}
-      onNavigateHome={() => navigate('/')}
-      onSelectCategory={(catName) => navigate(`/category/${catName.toLowerCase()}`)}
-    />
-  );
-}
-
-function ProductDetailRouteWrapper({ isLoggedIn }) {
-  const { productId } = useParams();
-  const navigate = useNavigate();
-
-  const product = mockProducts.find((p) => String(p._id) === String(productId));
-
-  return (
-    <ProductDetailPage
-      product={product}
-      isLoggedIn={isLoggedIn}
+      onSelectProduct={(product) => navigate(`/product/${product.slug}`)}
       onNavigateHome={() => navigate('/')}
       onSelectCategory={(catName) => navigate(`/category/${catName.toLowerCase()}`)}
     />
@@ -115,14 +98,14 @@ export default function App() {
             <HomePage
               selectedCategory={selectedCategory}
               onSelectCategory={setSelectedCategory}
-              onSelectProduct={(product) => navigate(`/product/${product._id}`)}
+              onSelectProduct={(product) => navigate(`/product/${product.slug}`)}
             />
           }
         />
         <Route path="/category/:categoryName" element={<CategoryRouteWrapper />} />
         <Route
-          path="/product/:productId"
-          element={<ProductDetailRouteWrapper isLoggedIn={isLoggedIn} />}
+          path="/product/:slug"
+          element={<ProductDetailPage isLoggedIn={isLoggedIn} />}
         />
         <Route
           path="/profile"

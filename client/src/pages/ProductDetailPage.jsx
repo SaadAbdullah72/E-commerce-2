@@ -1,43 +1,86 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { ShoppingCart, Heart, ShieldCheck, Truck, RotateCcw, Star, ChevronRight, Plus, Minus } from 'lucide-react';
+import { useState } from 'react';
+import { Link, useNavigate, useParams } from 'react-router-dom';
+import { ShoppingCart, Heart, Star, ChevronRight, Plus, Minus } from 'lucide-react';
 import { useCart } from '../context/CartContext';
-import { mockProducts } from '../data/mockProducts';
 import ProductReviewsSection from '../components/product/ProductReviewsSection';
+import { CatalogEmpty, CatalogError } from '../features/catalog/components/CatalogStates';
+import ProductImage from '../features/catalog/components/ProductImage';
+import { useProduct } from '../features/catalog/hooks/useCatalog';
+import { formatMoney } from '../shared/lib/formatMoney';
 
+/** Loads the product named in the URL (/product/:slug), then shows it. */
 export default function ProductDetailPage({ isLoggedIn }) {
-  const { productId } = useParams();
+  const { slug } = useParams();
+  const { data: product, isPending, isError, refetch } = useProduct(slug);
+
+  if (isPending) {
+    return (
+      <div className="min-h-screen bg-gray-50 pb-16">
+        <div className="max-w-7xl mx-auto px-4 py-4">
+          <div
+            role="status"
+            aria-label="Loading product"
+            className="grid animate-pulse grid-cols-1 gap-6 rounded-2xl border border-gray-100 bg-white p-6 lg:grid-cols-12"
+          >
+            <div className="aspect-square rounded-xl bg-gray-100 lg:col-span-6" />
+            <div className="space-y-3 lg:col-span-6">
+              <div className="h-4 w-1/4 rounded bg-gray-100" />
+              <div className="h-6 w-3/4 rounded bg-gray-100" />
+              <div className="h-8 w-1/3 rounded bg-gray-100" />
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="min-h-screen bg-gray-50 pb-16">
+        <div className="max-w-3xl mx-auto px-4 py-10">
+          <CatalogError message="We could not load this product." onRetry={() => refetch()} />
+        </div>
+      </div>
+    );
+  }
+
+  if (!product) {
+    return (
+      <div className="min-h-screen bg-gray-50 pb-16">
+        <div className="max-w-3xl mx-auto px-4 py-10">
+          <CatalogEmpty
+            title="Product not found"
+            text="This product does not exist or is no longer available."
+          />
+          <p className="mt-4 text-center text-xs">
+            <Link to="/" className="font-bold text-blue-600 hover:underline">
+              Back to home
+            </Link>
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // key: switching to another product starts with fresh selections
+  return <ProductDetailView key={product.id} product={product} isLoggedIn={isLoggedIn} />;
+}
+
+function ProductDetailView({ product, isLoggedIn }) {
   const navigate = useNavigate();
   const { addToCart, setIsCartOpen } = useCart();
 
-  // Fetch product matching ID (Fallback to initial default object if fetching fails)
-  const product = mockProducts.find((p) => String(p._id) === String(productId)) || {};
+  const productImages = product.images;
+  const sizes = product.sizes;
+  const colors = product.colors;
 
-  // Extract Admin-Driven Dynamic Arrays Safely
-  const productImages = Array.isArray(product.images) && product.images.length > 0 
-    ? product.images 
-    : [product.image || 'https://via.placeholder.com/600'];
-
-  const sizes = Array.isArray(product.sizes) ? product.sizes : [];
-  const colors = Array.isArray(product.colors) ? product.colors : [];
-
-  // Local State for Selected Options
-  const [selectedImage, setSelectedImage] = useState(productImages[0]);
-  const [selectedSize, setSelectedSize] = useState('');
-  const [selectedColor, setSelectedColor] = useState('');
+  const [selectedImage, setSelectedImage] = useState(productImages[0] ?? null);
+  const [selectedSize, setSelectedSize] = useState(sizes[0] ?? '');
+  const [selectedColor, setSelectedColor] = useState(colors[0]?.name ?? '');
   const [quantity, setQuantity] = useState(1);
   const [isWishlisted, setIsWishlisted] = useState(false);
 
-  // Synchronize state when product data loads dynamically from API/Admin Panel
-  useEffect(() => {
-    if (productImages.length > 0) setSelectedImage(productImages[0]);
-    if (sizes.length > 0) setSelectedSize(sizes[0]);
-    if (colors.length > 0) setSelectedColor(colors[0].name || colors[0]);
-  }, [product]);
-
-  const discountPercent = product.originalPrice 
-    ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100) 
-    : 0;
+  const discountPercent = product.discountPercent;
 
   const handleAddToCart = () => {
     // Format variant string dynamically based on Admin-defined choices
@@ -75,7 +118,7 @@ export default function ProductDetailPage({ isLoggedIn }) {
           <ChevronRight size={12} />
           <span className="capitalize">{product.category || 'Deals'}</span>
           <ChevronRight size={12} />
-          <span className="text-gray-900 truncate max-w-xs">{product.title || 'Product Details'}</span>
+          <span className="text-gray-900 truncate max-w-xs">{product.title}</span>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 bg-white border border-gray-100 rounded-2xl p-6 shadow-xs">
@@ -83,9 +126,9 @@ export default function ProductDetailPage({ isLoggedIn }) {
           {/* Dynamic Image Gallery */}
           <div className="lg:col-span-6 space-y-3">
             <div className="relative aspect-square bg-gray-50 border border-gray-100 rounded-xl overflow-hidden flex items-center justify-center p-4">
-              <img
+              <ProductImage
                 src={selectedImage}
-                alt={product.title || 'Product Image'}
+                alt={product.title}
                 className="w-full h-full object-contain"
               />
               {discountPercent > 0 && (
@@ -112,7 +155,7 @@ export default function ProductDetailPage({ isLoggedIn }) {
                       selectedImage === img ? 'border-blue-600 ring-2 ring-blue-500/20' : 'border-gray-200'
                     }`}
                   >
-                    <img src={img} alt={`Thumbnail ${idx}`} className="w-full h-full object-contain" />
+                    <ProductImage src={img} alt={`${product.title} - image ${idx + 1}`} className="w-full h-full object-contain" />
                   </button>
                 ))}
               </div>
@@ -126,27 +169,33 @@ export default function ProductDetailPage({ isLoggedIn }) {
                 {product.category || 'Item'}
               </span>
               <h1 className="text-lg sm:text-xl font-black text-gray-900 mt-2">
-                {product.title || 'Loading Product...'}
+                {product.title}
               </h1>
 
               <div className="flex items-center space-x-2 mt-2 text-xs">
-                <div className="flex items-center text-amber-500 font-bold">
-                  <Star size={14} className="fill-amber-400 text-amber-400 mr-1" />
-                  <span>{product.ratings || 5.0}</span>
-                </div>
-                <span className="text-gray-300">•</span>
-                <span className="text-gray-500 font-medium">{product.reviewsCount || 0} Reviews</span>
+                {product.reviewsCount > 0 ? (
+                  <>
+                    <div className="flex items-center text-amber-500 font-bold">
+                      <Star size={14} className="fill-amber-400 text-amber-400 mr-1" />
+                      <span>{product.ratings}</span>
+                    </div>
+                    <span className="text-gray-300">•</span>
+                    <span className="text-gray-500 font-medium">{product.reviewsCount} Reviews</span>
+                  </>
+                ) : (
+                  <span className="text-gray-500 font-medium">No reviews yet</span>
+                )}
               </div>
             </div>
 
             {/* Price Box */}
             <div className="p-3 bg-gray-50 flex items-baseline space-x-2">
               <span className="text-2xl font-black text-gray-900">
-                ${Number(product.price || 0).toFixed(2)}
+                {formatMoney(product.priceMinor, product.currency)}
               </span>
-              {product.originalPrice && (
+              {product.compareAtPriceMinor > product.priceMinor && (
                 <span className="text-xs font-medium text-gray-400 line-through">
-                  ${Number(product.originalPrice).toFixed(2)}
+                  {formatMoney(product.compareAtPriceMinor, product.currency)}
                 </span>
               )}
             </div>
