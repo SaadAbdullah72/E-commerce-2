@@ -5,7 +5,13 @@ import { electronics, lightning, productRow } from '@/test/fixtures/catalog';
 const supabase = vi.hoisted(() => ({ from: vi.fn() }));
 vi.mock('@/lib/supabase/client', () => ({ supabase }));
 
-import { getProductBySlug, listCategories, listDealTags, listProducts } from './catalogService';
+import {
+  getProductBySlug,
+  listCategories,
+  listDealTags,
+  listProducts,
+  listProductsByIds,
+} from './catalogService';
 
 /** A chainable stand-in for the Supabase query builder that records every call. */
 function fakeQuery(result) {
@@ -125,7 +131,10 @@ describe('getProductBySlug', () => {
     const product = await getProductBySlug('wireless-bluetooth-earbuds');
 
     expect(callsOf(query, 'eq')[0][1]).toEqual(['slug', 'wireless-bluetooth-earbuds']);
-    expect(product).toMatchObject({ id: 'prod-1', title: expect.any(String) });
+    expect(product).toMatchObject({
+      id: '11111111-1111-4111-8111-111111111111',
+      title: expect.any(String),
+    });
   });
 
   it('returns null when nothing matches', async () => {
@@ -164,5 +173,32 @@ describe('listCategories / listDealTags', () => {
     supabase.from.mockReturnValue(fakeQuery({ data: null, error: { message: 'x' } }));
     await expect(listCategories()).rejects.toThrow(/couldn't load the categories/);
     await expect(listDealTags()).rejects.toThrow(/couldn't load the deals/);
+  });
+});
+
+describe('listProductsByIds', () => {
+  const ID = '11111111-1111-4111-8111-111111111111';
+
+  it('does not query when there are no valid ids', async () => {
+    expect(await listProductsByIds([])).toEqual([]);
+    expect(await listProductsByIds(['prod-1', 5, null])).toEqual([]);
+    expect(supabase.from).not.toHaveBeenCalled();
+  });
+
+  it('asks for each valid id once', async () => {
+    const query = fakeQuery({ data: [productRow()], error: null });
+    supabase.from.mockReturnValue(query);
+
+    const products = await listProductsByIds([ID, ID, 'bad']);
+
+    expect(callsOf(query, 'in')[0][1]).toEqual(['id', [ID]]);
+    expect(products).toHaveLength(1);
+  });
+
+  it('throws a friendly error on failure', async () => {
+    supabase.from.mockReturnValue(fakeQuery({ data: null, error: { message: 'boom' } }));
+    const failure = await listProductsByIds([ID]).catch((error) => error);
+    expect(failure.message).toMatch(/your cart/i);
+    expect(failure.message).not.toMatch(/boom/);
   });
 });

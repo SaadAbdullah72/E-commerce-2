@@ -19,3 +19,10 @@ export const MARKET = {
 /** TODO(market): the "Under $5 Store" deal rule: label shown in the menu, and its price limit. */
 export const UNDER_STORE_LABEL = 'under $5 store';
 export const UNDER_STORE_MAX_PRICE_MINOR = 500;
+
+/**
+ * TODO(market): PLACEHOLDER delivery fee. The old pages showed a hard-coded "4,800" in naira.
+ * Real delivery rates (per region / courier) are designed in R5 (checkout). Until then
+ * every non-local order gets this flat amount, in whole cents.
+ */
+export const STANDARD_DELIVERY_FEE_MINOR = 480;

@@ -5,6 +5,7 @@ import {
   listCategories,
   listDealTags,
   listProducts,
+  listProductsByIds,
 } from '../services/catalogService';
 
 export const catalogKeys = {
@@ -20,6 +21,21 @@ export function useProducts(filters = {}, { enabled = true } = {}) {
     queryKey: catalogKeys.products(filters),
     queryFn: () => listProducts(filters),
     enabled,
+  });
+}
+
+/**
+ * Live data for a set of products, e.g. the items in the cart. Keeps showing the previous
+ * result while a changed id list is loading, so the cart does not flash empty.
+ * @param {string[]} ids
+ */
+export function useProductsByIds(ids) {
+  return useQuery({
+    queryKey: ['catalog', 'products-by-ids', ids],
+    queryFn: () => listProductsByIds(ids),
+    enabled: ids.length > 0,
+    staleTime: 30_000,
+    placeholderData: (previous) => previous,
   });
 }
 

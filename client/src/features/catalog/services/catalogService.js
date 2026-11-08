@@ -67,6 +67,28 @@ export async function getProductBySlug(slug) {
   return data ? mapProduct(data) : null;
 }
 
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const MAX_IDS = 50;
+
+/**
+ * Current data for specific products (used to price the cart). Ids that are not valid UUIDs
+ * are skipped so one bad value can never make the whole request fail. Hidden or deleted
+ * products are simply absent from the result.
+ *
+ * @param {string[]} ids
+ */
+export async function listProductsByIds(ids) {
+  const valid = [...new Set(ids)].filter((id) => typeof id === 'string' && UUID_PATTERN.test(id));
+  if (valid.length === 0) return [];
+
+  const { data, error } = await supabase
+    .from('products')
+    .select(PRODUCT_COLUMNS)
+    .in('id', valid.slice(0, MAX_IDS));
+  if (error) throw loadError('your cart');
+  return data.map(mapProduct);
+}
+
 export async function listCategories() {
   const { data, error } = await supabase
     .from('categories')

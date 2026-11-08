@@ -13,7 +13,7 @@ export const lightning = { id: 'tag-1', name: 'Lightning Deals', slug: 'lightnin
 /** @param {object} [overrides] */
 export function productRow(overrides = {}) {
   return {
-    id: 'prod-1',
+    id: '11111111-1111-4111-8111-111111111111',
     slug: 'wireless-bluetooth-earbuds',
     title: 'Wireless Bluetooth Earbuds Noise Cancelling',
     description: 'Great sound.',
