@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MapPin, ArrowRight, Truck } from 'lucide-react';
 import { useCart } from '../context/CartContext';
+import { STANDARD_DELIVERY_FEE_MINOR } from '../shared/constants/market';
+import { formatMoney } from '../shared/lib/formatMoney';
 
 const NIGERIAN_STATES = [
   'Abia State', 'Adamawa State', 'Akwa Ibom State', 'Anambra State',
@@ -37,7 +39,7 @@ const BAUCHI_EXCLUSIVE_COURIER = 'ShopYaro Express Delivery (Bauchi Local Only) 
 
 export default function ShippingPage({ onProceedToPayment }) {
   const navigate = useNavigate();
-  const { cart, totalPrice } = useCart();
+  const { subtotalMinor } = useCart();
 
   const [formData, setFormData] = useState({
     fullName: 'Huzaifa Javid',
@@ -67,8 +69,9 @@ export default function ShippingPage({ onProceedToPayment }) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    const finalDeliveryFee = formData.state === 'Bauchi State (Primary Local Hub)' ? 0 : 4800;
-    const finalPayload = { ...formData, deliveryFee: finalDeliveryFee };
+    const finalDeliveryFeeMinor =
+      formData.state === 'Bauchi State (Primary Local Hub)' ? 0 : STANDARD_DELIVERY_FEE_MINOR;
+    const finalPayload = { ...formData, deliveryFeeMinor: finalDeliveryFeeMinor };
 
     // Save directly to localStorage as an instant fallback
     localStorage.setItem('shopyaro_shipping', JSON.stringify(finalPayload));
@@ -85,8 +88,8 @@ export default function ShippingPage({ onProceedToPayment }) {
   const availableCities = formData.state ? (isBauchiState ? BAUCHI_CITIES : STANDARD_CITIES) : [];
   const availableCouriers = isBauchiState ? [BAUCHI_EXCLUSIVE_COURIER, ...STANDARD_COURIERS] : STANDARD_COURIERS;
 
-  const deliveryFee = isBauchiState ? 0 : 4800;
-  const grandTotal = totalPrice + deliveryFee;
+  const deliveryFeeMinor = isBauchiState ? 0 : STANDARD_DELIVERY_FEE_MINOR;
+  const grandTotalMinor = subtotalMinor + deliveryFeeMinor;
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20 font-sans">
@@ -204,7 +207,7 @@ export default function ShippingPage({ onProceedToPayment }) {
                 <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center gap-2.5 text-xs text-emerald-800[cite: 12]">
                   <Truck size={16} className="text-emerald-600 shrink-0" />
                   <span>
-                    <strong>Bauchi Metropolis Resident:</strong> Enjoy <strong>100% FREE Delivery (₦0.00)</strong> across all categories[cite: 12].
+                    <strong>Bauchi Metropolis Resident:</strong> Enjoy <strong>100% FREE Delivery ({formatMoney(0)})</strong> across all categories[cite: 12].
                   </span>
                 </div>
               )}
@@ -251,17 +254,17 @@ export default function ShippingPage({ onProceedToPayment }) {
             <div className="pt-4 border-t border-gray-100 space-y-2 text-xs">
               <div className="flex justify-between text-gray-500">
                 <span>Subtotal</span>
-                <span className="font-bold text-gray-900">₦{totalPrice.toLocaleString()}</span>
+                <span className="font-bold text-gray-900">{formatMoney(subtotalMinor)}</span>
               </div>
               <div className="flex justify-between text-gray-500">
                 <span>Delivery Fee</span>
                 <span className={`font-bold ${isBauchiState ? 'text-emerald-600' : 'text-gray-900'}`}>
-                  {isBauchiState ? '₦0.00 (FREE)' : '₦4,800.00'}
+                  {isBauchiState ? `${formatMoney(0)} (FREE)` : formatMoney(STANDARD_DELIVERY_FEE_MINOR)}
                 </span>
               </div>
               <div className="flex justify-between text-sm font-black text-gray-900 pt-2 border-t border-gray-100">
                 <span>Total Amount</span>
-                <span className="text-blue-600">₦{grandTotal.toLocaleString()}</span>
+                <span className="text-blue-600">{formatMoney(grandTotalMinor)}</span>
               </div>
             </div>
           </div>

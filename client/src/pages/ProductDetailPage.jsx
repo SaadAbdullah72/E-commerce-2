@@ -6,6 +6,7 @@ import ProductReviewsSection from '../components/product/ProductReviewsSection';
 import { CatalogEmpty, CatalogError } from '../features/catalog/components/CatalogStates';
 import ProductImage from '../features/catalog/components/ProductImage';
 import { useProduct } from '../features/catalog/hooks/useCatalog';
+import { maxQuantityFor } from '../features/cart/lib/cartMath';
 import { formatMoney } from '../shared/lib/formatMoney';
 
 /** Loads the product named in the URL (/product/:slug), then shows it. */
@@ -81,27 +82,17 @@ function ProductDetailView({ product, isLoggedIn }) {
   const [isWishlisted, setIsWishlisted] = useState(false);
 
   const discountPercent = product.discountPercent;
+  const maxQuantity = maxQuantityFor(product.stock);
+  const inStock = maxQuantity > 0;
 
   const handleAddToCart = () => {
-    // Format variant string dynamically based on Admin-defined choices
-    const variantParts = [];
-    if (selectedColor) variantParts.push(selectedColor);
-    if (selectedSize) variantParts.push(selectedSize);
-
-    const variantLabel = variantParts.length > 0 ? variantParts.join(' / ') : 'Standard';
-
-    addToCart(
-      {
-        ...product,
-        variant: variantLabel,
-        image: selectedImage,
-      },
-      quantity
-    );
+    if (!inStock) return;
+    addToCart(product, quantity, { size: selectedSize, color: selectedColor });
     setIsCartOpen(true);
   };
 
   const handleBuyNow = () => {
+    if (!inStock) return;
     handleAddToCart();
     navigate(isLoggedIn ? '/shipping' : '/login?redirect=shipping');
   };
@@ -266,12 +257,19 @@ function ProductDetailView({ product, isLoggedIn }) {
                 </div>
               )}
 
+              {!inStock && (
+                <p role="status" className="text-xs font-bold text-red-600">
+                  Out of stock
+                </p>
+              )}
+
               {/* Quantity */}
               <div>
                 <label className="block text-xs font-bold text-gray-700 mb-1.5">Quantity</label>
                 <div className="flex items-center w-28 border border-gray-200 rounded-lg bg-gray-50">
                   <button
                     onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                    aria-label="Decrease quantity"
                     className="px-2 py-1 text-gray-600 hover:bg-gray-200 transition cursor-pointer"
                   >
                     <Minus size={12} />
@@ -280,8 +278,10 @@ function ProductDetailView({ product, isLoggedIn }) {
                     {quantity}
                   </span>
                   <button
-                    onClick={() => setQuantity(quantity + 1)}
-                    className="px-2 py-1 text-gray-600 hover:bg-gray-200 transition cursor-pointer"
+                    onClick={() => setQuantity(Math.min(maxQuantity, quantity + 1))}
+                    disabled={quantity >= maxQuantity}
+                    aria-label="Increase quantity"
+                    className="px-2 py-1 text-gray-600 hover:bg-gray-200 transition cursor-pointer disabled:cursor-not-allowed disabled:opacity-40"
                   >
                     <Plus size={12} />
                   </button>
@@ -293,14 +293,16 @@ function ProductDetailView({ product, isLoggedIn }) {
             <div className="grid grid-cols-2 gap-3 pt-3 border-t border-gray-100">
               <button
                 onClick={handleAddToCart}
-                className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-1.5 cursor-pointer"
+                disabled={!inStock}
+                className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-1.5 cursor-pointer disabled:cursor-not-allowed disabled:bg-gray-300"
               >
                 <ShoppingCart size={15} /> Add to Cart
               </button>
 
               <button
                 onClick={handleBuyNow}
-                className="w-full py-2.5 bg-orange-500 hover:bg-orange-600 text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-1.5 cursor-pointer"
+                disabled={!inStock}
+                className="w-full py-2.5 bg-orange-500 hover:bg-orange-600 text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-1.5 cursor-pointer disabled:cursor-not-allowed disabled:bg-gray-300"
               >
                 Buy Now
               </button>

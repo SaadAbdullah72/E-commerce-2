@@ -1,120 +1,137 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
+
+import { MAX_CART_LINES } from '../features/cart/constants';
+import { useCartLines } from '../features/cart/hooks/useCartLines';
+import {
+  clampQuantity,
+  countUnits,
+  purchasableSelected,
+  subtotalMinor as sumSubtotalMinor,
+} from '../features/cart/lib/cartMath';
+import { loadCart, saveCart } from '../features/cart/lib/cartStorage';
+import { lineKey } from '../features/cart/lib/lineKey';
 
 const CartContext = createContext();
 
+/**
+ * The cart. What is stored in the browser is only what the customer chose (product id, size,
+ * colour, quantity, ticked or not). Titles, images, prices and stock are always read fresh
+ * from the database, and all money is whole cents.
+ */
 export function CartProvider({ children }) {
-  const [cart, setCart] = useState(() => {
-    const localData = localStorage.getItem('shopyaro_cart');
-    return localData ? JSON.parse(localData) : [];
-  });
-
+  const [items, setItems] = useState(loadCart);
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const { lines, productsById, isLoading, isError, refetch } = useCartLines(items);
 
   useEffect(() => {
-    localStorage.setItem('shopyaro_cart', JSON.stringify(cart));
-  }, [cart]);
+    saveCart(items);
+  }, [items]);
 
-  // Add item with selected = true by default
-  const addToCart = (product, quantity = 1, variant = null) => {
-    const qtyToAdd = Number(quantity) > 0 ? Number(quantity) : 1;
+  /**
+   * @param {{ id?: string, _id?: string, stock?: number, priceMinor?: number,
+   *   sizes?: string[], colors?: { name: string }[] }} product
+   * @param {number} [quantity]
+   * @param {{ size?: string, color?: string }} [options] defaults to the first size/colour
+   */
+  const addToCart = (product, quantity = 1, options = {}) => {
+    const productId = product.id ?? product._id;
+    const size = options.size || product.sizes?.[0] || null;
+    const color = options.color || product.colors?.[0]?.name || null;
+    const key = lineKey(productId, size, color);
 
-    setCart((prevCart) => {
-      const existingIndex = prevCart.findIndex(
-        (item) => String(item._id) === String(product._id) && item.variant === variant
-      );
-
-      if (existingIndex > -1) {
-        return prevCart.map((item, idx) =>
-          idx === existingIndex
-            ? { ...item, quantity: item.quantity + qtyToAdd, selected: true }
-            : item
+    setItems((previous) => {
+      const existing = previous.find((item) => lineKey(item.productId, item.size, item.color) === key);
+      if (existing) {
+        const next = clampQuantity(existing.quantity + quantity, product.stock);
+        if (next === 0) return previous;
+        return previous.map((item) =>
+          item === existing ? { ...item, quantity: next, selected: true } : item,
         );
       }
 
+      const first = clampQuantity(quantity, product.stock);
+      if (first === 0 || previous.length >= MAX_CART_LINES) return previous;
       return [
-        ...prevCart,
+        ...previous,
         {
-          ...product,
-          quantity: qtyToAdd,
-          variant: variant,
+          productId,
+          size,
+          color,
+          quantity: first,
           selected: true,
+          priceSeenMinor: Number.isInteger(product.priceMinor) ? product.priceMinor : null,
         },
       ];
     });
   };
 
-  // Toggle selection for a single item
-  const toggleSelectItem = (id, variant = null) => {
-    setCart((prev) =>
-      prev.map((item) =>
-        String(item._id) === String(id) && item.variant === variant
-          ? { ...item, selected: !item.selected }
-          : item
-      )
+  const matches = (item, key) => lineKey(item.productId, item.size, item.color) === key;
+
+  const toggleSelectItem = (key) =>
+    setItems((previous) =>
+      previous.map((item) => (matches(item, key) ? { ...item, selected: !item.selected } : item)),
     );
-  };
 
-  // Select or Deselect All
-  const toggleSelectAll = (selectState) => {
-    setCart((prev) => prev.map((item) => ({ ...item, selected: selectState })));
-  };
+  const toggleSelectAll = (selectState) =>
+    setItems((previous) => previous.map((item) => ({ ...item, selected: selectState })));
 
-  const removeFromCart = (id, variant = null) => {
-    setCart((prev) => prev.filter((item) => !(String(item._id) === String(id) && item.variant === variant)));
-  };
+  const removeFromCart = (key) => setItems((previous) => previous.filter((item) => !matches(item, key)));
 
-  const updateQuantity = (id, variant, delta) => {
-    setCart((prev) =>
-      prev
-        .map((item) => {
-          if (String(item._id) === String(id) && item.variant === variant) {
-            const newQty = item.quantity + delta;
-            return newQty > 0 ? { ...item, quantity: newQty } : null;
-          }
-          return item;
-        })
-        .filter(Boolean)
+  /** Change a line's quantity by +1 / -1. Never below 1 (use remove) and never above stock or the cap. */
+  const updateQuantity = (key, delta) =>
+    setItems((previous) =>
+      previous.map((item) => {
+        if (!matches(item, key)) return item;
+        const stock = productsById.get(item.productId)?.stock;
+        const next = clampQuantity(item.quantity + delta, stock);
+        return next === 0 ? item : { ...item, quantity: next };
+      }),
     );
-  };
 
-  const clearCart = () => setCart([]);
+  /** The customer has seen the new price: stop showing the "price changed" notice. */
+  const acknowledgePriceChange = (key) =>
+    setItems((previous) =>
+      previous.map((item) => {
+        if (!matches(item, key)) return item;
+        const price = productsById.get(item.productId)?.priceMinor;
+        return Number.isInteger(price) ? { ...item, priceSeenMinor: price } : item;
+      }),
+    );
 
-  // Removes ONLY selected/purchased items after a successful order
+  const clearCart = () => setItems([]);
+
+  /** Remove only what was just bought (ticked and available) after a successful order. */
   const removeSelectedItems = () => {
-    setCart((prev) => prev.filter((item) => !item.selected));
+    const bought = new Set(purchasableSelected(lines).map((line) => line.key));
+    setItems((previous) => previous.filter((item) => !bought.has(lineKey(item.productId, item.size, item.color))));
   };
 
-  // Calculated properties based on selected items
-  const selectedCart = cart.filter((item) => item.selected);
-  const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
-  const selectedItemsCount = selectedCart.reduce((sum, item) => sum + item.quantity, 0);
-  const totalPrice = selectedCart.reduce(
-    (sum, item) => sum + (Number(item.price) || 0) * item.quantity,
-    0
-  );
+  const selectedCart = purchasableSelected(lines);
 
-  return (
-    <CartContext.Provider
-      value={{
-        cart,
-        selectedCart,
-        isCartOpen,
-        setIsCartOpen,
-        addToCart,
-        toggleSelectItem,
-        toggleSelectAll,
-        removeFromCart,
-        updateQuantity,
-        clearCart,
-        removeSelectedItems,
-        totalItems,
-        selectedItemsCount,
-        totalPrice,
-      }}
-    >
-      {children}
-    </CartContext.Provider>
-  );
+  const value = {
+    cart: lines,
+    selectedCart,
+    isCartOpen,
+    setIsCartOpen,
+    isCartLoading: isLoading,
+    isCartError: isError,
+    refetchCart: refetch,
+    addToCart,
+    toggleSelectItem,
+    toggleSelectAll,
+    removeFromCart,
+    updateQuantity,
+    acknowledgePriceChange,
+    clearCart,
+    removeSelectedItems,
+    totalItems: items.reduce((sum, item) => sum + item.quantity, 0),
+    selectedItemsCount: countUnits(selectedCart),
+    /** Whole cents, from live database prices. */
+    subtotalMinor: sumSubtotalMinor(selectedCart),
+  };
+
+  return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 }
 
-export const useCart = () => useContext(CartContext);
+// eslint-disable-next-line react-refresh/only-export-components
+export const useCart =() => useContext(CartContext);

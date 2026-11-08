@@ -2,11 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { CreditCard, Lock, CheckCircle2, ShieldCheck } from 'lucide-react';
 import { useCart } from '../context/CartContext';
+import ProductImage from '../features/catalog/components/ProductImage';
+import { STANDARD_DELIVERY_FEE_MINOR } from '../shared/constants/market';
+import { formatMoney } from '../shared/lib/formatMoney';
 
 export default function CheckoutPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { selectedCart, totalPrice, removeSelectedItems } = useCart();
+  const { selectedCart, subtotalMinor, removeSelectedItems } = useCart();
 
   // Retrieve shipping state from router or localStorage fallback
   const [shippingData, setShippingData] = useState(() => {
@@ -25,8 +28,9 @@ export default function CheckoutPage() {
   const [paymentMethod, setPaymentMethod] = useState('paystack');
   const [isCompleted, setIsCompleted] = useState(false);
 
-  const deliveryFee = shippingData.deliveryFee ?? (isBauchiState ? 0 : 4800);
-  const grandTotal = totalPrice + deliveryFee;
+  const deliveryFeeMinor =
+    shippingData.deliveryFeeMinor ?? (isBauchiState ? 0 : STANDARD_DELIVERY_FEE_MINOR);
+  const grandTotalMinor = subtotalMinor + deliveryFeeMinor;
 
   const handlePlaceOrder = (e) => {
     e.preventDefault();
@@ -203,20 +207,16 @@ export default function CheckoutPage() {
               </h3>
 
               <div className="max-h-60 overflow-y-auto space-y-3 pr-1">
-                {selectedCart.map((item, idx) => (
-                  <div key={idx} className="flex items-center justify-between text-xs">
+                {selectedCart.map((item) => (
+                  <div key={item.key} className="flex items-center justify-between text-xs">
                     <div className="flex items-center gap-2 truncate">
-                      <img 
-                        src={item.images?.[0] || item.image} 
-                        alt="" 
-                        className="w-10 h-10 object-contain rounded border border-gray-100 p-1 bg-gray-50" 
-                      />
+                      <ProductImage src={item.image} alt="" className="w-10 h-10 object-contain rounded border border-gray-100 p-1 bg-gray-50" />
                       <div>
                         <span className="font-bold text-gray-900 truncate block max-w-[150px]">{item.title || item.name}</span>
                         <span className="text-gray-500 text-[11px]">Qty: {item.quantity}</span>
                       </div>
                     </div>
-                    <span className="font-bold text-gray-900">₦{(Number(item.price) * item.quantity).toLocaleString()}</span>
+                    <span className="font-bold text-gray-900">{formatMoney(item.lineTotalMinor, item.currency)}</span>
                   </div>
                 ))}
               </div>
@@ -224,17 +224,17 @@ export default function CheckoutPage() {
               <div className="pt-4 border-t border-gray-100 space-y-2 text-xs">
                 <div className="flex justify-between text-gray-500">
                   <span>Selected Items Total</span>
-                  <span className="font-bold text-gray-900">₦{totalPrice.toLocaleString()}</span>
+                  <span className="font-bold text-gray-900">{formatMoney(subtotalMinor)}</span>
                 </div>
                 <div className="flex justify-between text-gray-500">
                   <span>Delivery Fee</span>
                   <span className={`font-bold ${isBauchiState ? 'text-emerald-600' : 'text-gray-900'}`}>
-                    {isBauchiState ? '₦0.00 (FREE)' : '₦4,800.00'}
+                    {deliveryFeeMinor === 0 ? `${formatMoney(0)} (FREE)` : formatMoney(deliveryFeeMinor)}
                   </span>
                 </div>
                 <div className="flex justify-between text-sm font-black text-gray-900 pt-3 border-t border-gray-100">
                   <span>Total Amount</span>
-                  <span className="text-red-600 font-extrabold text-base">₦{grandTotal.toLocaleString()}</span>
+                  <span className="text-red-600 font-extrabold text-base">{formatMoney(grandTotalMinor)}</span>
                 </div>
               </div>
             </div>
@@ -248,19 +248,19 @@ export default function CheckoutPage() {
               {paymentMethod === 'paystack' && (
                 <>
                   <CreditCard size={15} />
-                  <span>Pay with Paystack (₦{grandTotal.toLocaleString()})</span>
+                  <span>Pay with Paystack ({formatMoney(grandTotalMinor)})</span>
                 </>
               )}
               {paymentMethod === 'squad' && (
                 <>
                   <CreditCard size={15} />
-                  <span>Pay with Squad by GTCO (₦{grandTotal.toLocaleString()})</span>
+                  <span>Pay with Squad by GTCO ({formatMoney(grandTotalMinor)})</span>
                 </>
               )}
               {paymentMethod === 'cod' && (
                 <>
                   <ShieldCheck size={15} />
-                  <span>Confirm Cash on Delivery (₦{grandTotal.toLocaleString()})</span>
+                  <span>Confirm Cash on Delivery ({formatMoney(grandTotalMinor)})</span>
                 </>
               )}
             </button>

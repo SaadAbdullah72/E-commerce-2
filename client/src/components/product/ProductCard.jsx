@@ -56,9 +56,12 @@ export default function ProductCard({ product, onSelectProduct }) {
             e.stopPropagation(); // Prevents opening detail page when clicking Add to Cart
             addToCart(product);
           }}
-          className="bg-orange-500 hover:bg-orange-600 text-white p-2 rounded-lg shadow transition active:scale-95"
-          title="Add to Cart"
-          aria-label={`Add ${product.title} to cart`}
+          disabled={product.stock <= 0}
+          className="bg-orange-500 hover:bg-orange-600 text-white p-2 rounded-lg shadow transition active:scale-95 disabled:cursor-not-allowed disabled:bg-gray-300 disabled:shadow-none"
+          title={product.stock <= 0 ? 'Out of stock' : 'Add to Cart'}
+          aria-label={
+            product.stock <= 0 ? `${product.title} is out of stock` : `Add ${product.title} to cart`
+          }
         >
           <ShoppingCart size={15} />
         </button>

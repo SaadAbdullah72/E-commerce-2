@@ -8,6 +8,7 @@ import { mapCategory, mapDealTag, mapProduct } from '@/features/catalog/lib/mapP
 
 const service = vi.hoisted(() => ({
   listProducts: vi.fn(),
+  listProductsByIds: vi.fn(),
   getProductBySlug: vi.fn(),
   listCategories: vi.fn(),
   listDealTags: vi.fn(),
@@ -22,7 +23,7 @@ import ProductDetailPage from './ProductDetailPage';
 const earbuds = mapProduct(productRow());
 const blender = mapProduct(
   productRow({
-    id: 'prod-3',
+    id: '33333333-3333-4333-8333-333333333333',
     slug: 'portable-mini-blender',
     title: 'Portable USB Mini Blender',
     price_minor: 1699,
@@ -263,16 +264,23 @@ describe('ProductDetailPage', () => {
     expect(screen.getByRole('button', { name: 'M' })).toBeInTheDocument();
   });
 
-  it('adds the product to the cart', async () => {
+  it('adds the product to the cart as an id + quantity, with no price stored', async () => {
     const user = userEvent.setup();
     service.getProductBySlug.mockResolvedValue(earbuds);
+    service.listProductsByIds.mockResolvedValue([earbuds]);
     renderDetail('wireless-bluetooth-earbuds');
 
     await user.click(await screen.findByRole('button', { name: /add to cart/i }));
 
     await waitFor(() => {
-      const stored = JSON.parse(window.localStorage.getItem('shopyaro_cart'));
-      expect(stored[0]).toMatchObject({ _id: 'prod-1', price: 12.99, quantity: 1 });
+      const stored = JSON.parse(window.localStorage.getItem('shopyaro:cart:v2'));
+      expect(stored.items[0]).toMatchObject({
+        productId: '11111111-1111-4111-8111-111111111111',
+        quantity: 1,
+        selected: true,
+      });
+      expect(stored.items[0]).not.toHaveProperty('price');
+      expect(stored.items[0]).not.toHaveProperty('title');
     });
   });
 
