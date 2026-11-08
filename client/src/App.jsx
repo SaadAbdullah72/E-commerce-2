@@ -8,7 +8,12 @@ import CartDrawer from './components/cart/CartDrawer';
 import ShippingPage from './pages/ShippingPage';
 import CheckoutPage from './pages/CheckoutPage';
 import LoginPage from './pages/LoginPage';
-import SigninPage from './pages/SigninPage';
+import AuthConfirmPage from './features/auth/pages/AuthConfirmPage';
+import ForgotPasswordPage from './features/auth/pages/ForgotPasswordPage';
+import ResetPasswordPage from './features/auth/pages/ResetPasswordPage';
+import SignupPage from './features/auth/pages/SignupPage';
+import PrivacyPage from './features/legal/pages/PrivacyPage';
+import TermsPage from './features/legal/pages/TermsPage';
 import { mockProducts } from './data/mockProducts';
 import ProfilePage from './pages/ProfilePage';
 import MyOrdersPage from './pages/MyOrdersPage';
@@ -30,6 +35,12 @@ function AdminRoute({ children, isLoggedIn }) {
     return <Navigate to="/" replace />;
   }
   return children;
+}
+
+// Old /signin links carry ?redirect=...; keep it (SignupPage validates it against an allow-list).
+function LegacySigninRedirect() {
+  const { search } = useLocation();
+  return <Navigate to={`/signup${search}`} replace />;
 }
 
 function CategoryRouteWrapper() {
@@ -152,10 +163,14 @@ export default function App() {
           path="/login"
           element={<LoginPage onLoginSuccess={(status) => setIsLoggedIn(status)} />}
         />
-        <Route
-          path="/signin"
-          element={<SigninPage onRegisterSuccess={(status) => setIsLoggedIn(status)} />}
-        />
+        {/* Legacy URL kept so old links (e.g. from the login page) still work. */}
+        <Route path="/signin" element={<LegacySigninRedirect />} />
+        <Route path="/signup" element={<SignupPage />} />
+        <Route path="/auth/confirm" element={<AuthConfirmPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/auth/reset" element={<ResetPasswordPage />} />
+        <Route path="/terms" element={<TermsPage />} />
+        <Route path="/privacy" element={<PrivacyPage />} />
 
         <Route
           path="/shipping"
