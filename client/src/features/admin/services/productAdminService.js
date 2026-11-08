@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabase/client';
 
+import { toLocalInput } from '../lib/dates';
 import { minorToInput } from '../lib/money';
 import { friendlySaveError } from './saveErrors';
 
@@ -11,15 +12,6 @@ const EDIT_COLUMNS = [
   'images:product_images(url, public_id, alt, position)',
   'product_deal_tags(deal_tag_id)',
 ].join(', ');
-
-/** ISO date -> the "YYYY-MM-DDTHH:mm" text a datetime-local input wants (local time). */
-function toLocalInput(iso) {
-  if (!iso) return '';
-  const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) return '';
-  const pad = (number) => String(number).padStart(2, '0');
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
-}
 
 /**
  * Create (id = null) or update a product, with its images and deal tags, in one transaction.
