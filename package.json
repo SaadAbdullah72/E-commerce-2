@@ -2,10 +2,11 @@
   "name": "shopyaro-monorepo",
   "version": "1.0.0",
   "scripts": {
-    "client": "npm run dev --prefix client",
-    "server": "nodemon server/index.js",
-    "dev": "concurrently \"npm run server\" \"npm run client\"",
-    "build": "npm run build --prefix client"
+    "dev": "npm --prefix client run dev",
+    "build": "npm --prefix client run build",
+    "lint": "npm --prefix client run lint",
+    "test": "npm --prefix client run test",
+    "preview": "npm --prefix client run preview"
   },
   "devDependencies": {
     "concurrently": "^8.2.2",
