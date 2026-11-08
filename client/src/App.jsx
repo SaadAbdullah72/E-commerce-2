@@ -7,7 +7,10 @@ import ProductDetailPage from './pages/ProductDetailPage';
 import CartDrawer from './components/cart/CartDrawer';
 import ShippingPage from './pages/ShippingPage';
 import CheckoutPage from './pages/CheckoutPage';
-import LoginPage from './pages/LoginPage';
+import AdminRoute from './features/auth/components/AdminRoute';
+import ProtectedRoute from './features/auth/components/ProtectedRoute';
+import { useAuth } from './features/auth/hooks/useAuth';
+import LoginPage from './features/auth/pages/LoginPage';
 import AuthConfirmPage from './features/auth/pages/AuthConfirmPage';
 import ForgotPasswordPage from './features/auth/pages/ForgotPasswordPage';
 import ResetPasswordPage from './features/auth/pages/ResetPasswordPage';
@@ -18,24 +21,6 @@ import { mockProducts } from './data/mockProducts';
 import ProfilePage from './pages/ProfilePage';
 import MyOrdersPage from './pages/MyOrdersPage';
 import AdminDashboard from './pages/AdminDashboard';
-import authService from './services/authService';
-
-function ProtectedRoute({ children, isLoggedIn }) {
-  if (!isLoggedIn) {
-    return <Navigate to="/login?redirect=shipping" replace />;
-  }
-  return children;
-}
-
-function AdminRoute({ children, isLoggedIn }) {
-  if (!isLoggedIn) {
-    return <Navigate to="/login" replace />;
-  }
-  if (!authService.isAdmin()) {
-    return <Navigate to="/" replace />;
-  }
-  return children;
-}
 
 // Old /signin links carry ?redirect=...; keep it (SignupPage validates it against an allow-list).
 function LegacySigninRedirect() {
@@ -76,17 +61,14 @@ function ProductDetailRouteWrapper({ isLoggedIn }) {
 export default function App() {
   const navigate = useNavigate();
   const location = useLocation();
-  const [isLoggedIn, setIsLoggedIn] = useState(() => authService.isAuthenticated());
+  const { status, isAdmin, signOut } = useAuth();
+  const isLoggedIn = status === 'authenticated';
   const [selectedCategory, setSelectedCategory] = useState(null);
 
-  const handleLogout = () => {
-    authService.logout();
-    setIsLoggedIn(false);
-  };
+  const handleLogout = () => signOut();
 
   // Check if current route is under the admin dashboard
   const isAdminRoute = location.pathname.startsWith('/admin');
-  const isAdmin = authService.isAdmin();
 
   // If logged in as admin, force direct access to /admin dashboard (admin cannot shop)
   useEffect(() => {
@@ -144,7 +126,7 @@ export default function App() {
         <Route
           path="/profile"
           element={
-            <ProtectedRoute isLoggedIn={isLoggedIn}>
+            <ProtectedRoute>
               <ProfilePage onLogout={handleLogout} />
             </ProtectedRoute>
           }
@@ -153,7 +135,7 @@ export default function App() {
         <Route
           path="/orders"
           element={
-            <ProtectedRoute isLoggedIn={isLoggedIn}>
+            <ProtectedRoute>
               <MyOrdersPage />
             </ProtectedRoute>
           }
@@ -161,7 +143,7 @@ export default function App() {
 
         <Route
           path="/login"
-          element={<LoginPage onLoginSuccess={(status) => setIsLoggedIn(status)} />}
+          element={<LoginPage />}
         />
         {/* Legacy URL kept so old links (e.g. from the login page) still work. */}
         <Route path="/signin" element={<LegacySigninRedirect />} />
@@ -175,7 +157,7 @@ export default function App() {
         <Route
           path="/shipping"
           element={
-            <ProtectedRoute isLoggedIn={isLoggedIn}>
+            <ProtectedRoute>
               <ShippingPage onProceedToPayment={() => navigate('/checkout')} />
             </ProtectedRoute>
           }
@@ -183,7 +165,7 @@ export default function App() {
         <Route
           path="/checkout"
           element={
-            <ProtectedRoute isLoggedIn={isLoggedIn}>
+            <ProtectedRoute>
               <CheckoutPage />
             </ProtectedRoute>
           }
@@ -192,7 +174,7 @@ export default function App() {
         <Route 
           path="/admin" 
           element={
-            <AdminRoute isLoggedIn={isLoggedIn}>
+            <AdminRoute>
               <AdminDashboard onLogout={handleLogout} />
             </AdminRoute>
           } 

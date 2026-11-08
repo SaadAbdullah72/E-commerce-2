@@ -1,59 +1,25 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { User, Mail, Phone, MapPin, Package, LogOut, Save, CheckCircle2, ShieldCheck } from 'lucide-react';
-import authService from '../services/authService';
+import { User, Mail, Phone, MapPin, Package, LogOut, ShieldCheck } from 'lucide-react';
+import { useAuth } from '../features/auth/hooks/useAuth';
 
+const FIELD_CLASS =
+  'w-full px-3.5 py-2.5 bg-gray-100 border border-gray-200 rounded-xl text-xs text-gray-700 cursor-not-allowed';
+
+const FIELD_ICON_CLASS = FIELD_CLASS.replace('px-3.5', 'pl-9 pr-3.5');
+
+// Read-only for now: saving profile edits comes with the profile/orders phase (R6).
 export default function ProfilePage({ onLogout }) {
   const navigate = useNavigate();
-  const [saved, setSaved] = useState(false);
-  const [error, setError] = useState('');
+  const { user, account } = useAuth();
 
-  const [formData, setFormData] = useState(() => {
-    const stored = authService.getStoredUser();
-    return {
-      name: stored?.name || 'Customer',
-      email: stored?.email || '',
-      phone: stored?.phone || '',
-      address: stored?.address || '',
-      city: stored?.city || '',
-      zipCode: stored?.zip_code || '',
-      country: stored?.country || '',
-    };
-  });
-
-  useEffect(() => {
-    // Refresh user details from server
-    authService.getMe().then((user) => {
-      if (user) {
-        setFormData({
-          name: user.name || '',
-          email: user.email || '',
-          phone: user.phone || '',
-          address: user.address || '',
-          city: user.city || '',
-          zipCode: user.zip_code || '',
-          country: user.country || '',
-        });
-      }
-    }).catch(() => {
-      // If fetching fails or offline, keep stored local values
-    });
-  }, []);
-
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError('');
-    try {
-      await authService.updateProfile(formData);
-      setSaved(true);
-      setTimeout(() => setSaved(false), 3000);
-    } catch (err) {
-      setError(err.response?.data?.message || 'Failed to update profile.');
-    }
+  const formData = {
+    name: account?.fullName || 'Customer',
+    email: user?.email || '',
+    phone: account?.phone || '',
+    address: '',
+    city: '',
+    zipCode: '',
   };
 
   return (
@@ -68,8 +34,8 @@ export default function ProfilePage({ onLogout }) {
           </div>
           
           <button
-            onClick={() => {
-              if (onLogout) onLogout();
+            onClick={async () => {
+              if (onLogout) await onLogout();
               navigate('/login');
             }}
             className="self-start sm:self-auto flex items-center gap-1.5 px-3.5 py-2 border border-red-200 text-red-600 hover:bg-red-50 rounded-xl text-xs font-bold transition cursor-pointer"
@@ -119,13 +85,11 @@ export default function ProfilePage({ onLogout }) {
 
           {/* Profile Form Content */}
           <div className="lg:col-span-8 bg-white border border-gray-200 rounded-2xl p-6 sm:p-8 shadow-xs">
-            {error && (
-              <div className="mb-4 bg-red-50 border border-red-200 text-red-600 text-xs p-3 rounded-xl font-medium">
-                {error}
-              </div>
-            )}
+            <p role="status" className="mb-4 rounded-xl border border-blue-100 bg-blue-50 p-3 text-xs font-medium text-blue-700">
+              Editing your details is coming soon. For now this page is read-only.
+            </p>
 
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={(e) => e.preventDefault()} className="space-y-6">
               
               {/* Personal Info Section */}
               <div className="space-y-4">
@@ -141,9 +105,8 @@ export default function ProfilePage({ onLogout }) {
                       type="text"
                       name="name"
                       value={formData.name}
-                      onChange={handleChange}
-                      required
-                      className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs text-gray-900 focus:outline-none focus:bg-white focus:border-blue-600 transition"
+                      disabled
+                      className={FIELD_CLASS}
                     />
                   </div>
 
@@ -157,9 +120,8 @@ export default function ProfilePage({ onLogout }) {
                         type="email"
                         name="email"
                         value={formData.email}
-                        onChange={handleChange}
-                        required
-                        className="w-full pl-9 pr-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs text-gray-900 focus:outline-none focus:bg-white focus:border-blue-600 transition"
+                        disabled
+                          className={FIELD_ICON_CLASS}
                       />
                     </div>
                   </div>
@@ -174,9 +136,8 @@ export default function ProfilePage({ onLogout }) {
                         type="text"
                         name="phone"
                         value={formData.phone}
-                        onChange={handleChange}
-                        required
-                        className="w-full pl-9 pr-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs text-gray-900 focus:outline-none focus:bg-white focus:border-blue-600 transition"
+                        disabled
+                          className={FIELD_ICON_CLASS}
                       />
                     </div>
                   </div>
@@ -197,9 +158,8 @@ export default function ProfilePage({ onLogout }) {
                       type="text"
                       name="address"
                       value={formData.address}
-                      onChange={handleChange}
-                      required
-                      className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs text-gray-900 focus:outline-none focus:bg-white focus:border-blue-600 transition"
+                      disabled
+                      className={FIELD_CLASS}
                     />
                   </div>
 
@@ -209,9 +169,8 @@ export default function ProfilePage({ onLogout }) {
                       type="text"
                       name="city"
                       value={formData.city}
-                      onChange={handleChange}
-                      required
-                      className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs text-gray-900 focus:outline-none focus:bg-white focus:border-blue-600 transition"
+                      disabled
+                      className={FIELD_CLASS}
                     />
                   </div>
 
@@ -221,29 +180,11 @@ export default function ProfilePage({ onLogout }) {
                       type="text"
                       name="zipCode"
                       value={formData.zipCode}
-                      onChange={handleChange}
-                      required
-                      className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs text-gray-900 focus:outline-none focus:bg-white focus:border-blue-600 transition"
+                      disabled
+                      className={FIELD_CLASS}
                     />
                   </div>
                 </div>
-              </div>
-
-              {/* Submit Action */}
-              <div className="pt-4 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-end gap-3">
-                {saved && (
-                  <div className="flex items-center gap-1.5 text-xs font-semibold text-emerald-600 animate-fade-in order-2 sm:order-1">
-                    <CheckCircle2 size={15} className="shrink-0" />
-                    <span>Changes saved</span>
-                  </div>
-                )}
-
-                <button
-                  type="submit"
-                  className="w-full sm:w-auto px-6 py-2.5 bg-orange-500 hover:bg-orange-600 text-white font-bold text-xs rounded-xl transition shadow-xs flex items-center justify-center gap-2 cursor-pointer active:scale-[0.99] order-1 sm:order-2"
-                >
-                  <Save size={14} /> Save Profile Changes
-                </button>
               </div>
 
             </form>
