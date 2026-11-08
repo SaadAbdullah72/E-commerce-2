@@ -7,7 +7,7 @@ const ALLOWED_ORIGINS = new Set([
   'http://localhost:5173',
   'http://localhost:5174',
 ]);
-const FOLDERS = new Set(['products', 'categories']);
+const FOLDERS = new Set(['products', 'categories', 'banners']);
 const ALLOWED_FORMATS = 'jpg,jpeg,png,webp';
 const MAX_SIGNATURES_PER_MINUTE = 30;
 

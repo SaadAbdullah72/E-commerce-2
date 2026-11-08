@@ -79,7 +79,14 @@ describe('admin layout', () => {
     );
     expect(within(nav).queryByRole('link', { name: /orders/i })).not.toBeInTheDocument();
     expect(within(nav).getByText('Phase 3')).toBeInTheDocument();
-    expect(within(nav).getAllByText('Phase 4')).toHaveLength(2);
+    expect(within(nav).getByRole('link', { name: 'Coupons' })).toHaveAttribute(
+      'href',
+      '/admin/coupons',
+    );
+    expect(within(nav).getByRole('link', { name: 'Banners' })).toHaveAttribute(
+      'href',
+      '/admin/banners',
+    );
     expect(within(nav).getByText('Phase 5')).toBeInTheDocument();
     expect(screen.getAllByText('admin@example.com').length).toBeGreaterThan(0);
   });

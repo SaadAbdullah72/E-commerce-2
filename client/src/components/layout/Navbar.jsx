@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import AnnouncementTicker from '../../features/banners/components/AnnouncementTicker';
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { ShoppingCart, Search, User, Zap, X } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
@@ -22,14 +23,6 @@ export default function Navbar({ onSearch, onSelectCategory }) {
       setSearchTerm(urlKeyword);
     }
   }, [searchParams, isHomePage]);
-
-  const deals = [
-    { title: "FLASH SALE: Wireless Earbuds 74% OFF" },
-    { title: "FREE Express Shipping on Orders Over $20" },
-    { title: "Smartwatches Starting at $14.99" },
-    { title: "90-Day Money-Back Guarantee" },
-    { title: "MEGA DISCOUNT: Electronics up to 85% OFF" },
-  ];
 
   const categories = [
     'Lightning Deals',
@@ -93,20 +86,8 @@ export default function Navbar({ onSearch, onSelectCategory }) {
 
   return (
     <header className="sticky top-0 z-50 bg-white border-b border-gray-100 shadow-sm font-sans">
-      {/* 1. MOVING FLASH DEALS TICKER */}
-      <div className="bg-gradient-to-r from-blue-700 via-indigo-600 to-blue-600 text-white text-xs font-bold py-2 overflow-hidden relative shadow-inner">
-        <div className="animate-ticker flex items-center space-x-12 whitespace-nowrap">
-          {[...deals, ...deals].map((deal, idx) => (
-            <div key={idx} className="flex items-center gap-2 tracking-wide cursor-pointer ">
-              <Zap size={13} className="fill-orange-400 text-orange-400 animate-pulse" />
-              <span>{deal.title}</span>
-              <span className="bg-orange-500 text-white text-[10px] px-2 py-0.5 rounded-full font-bold uppercase">
-                Claim
-              </span>
-            </div>
-          ))}
-        </div>
-      </div>
+      {/* 1. ANNOUNCEMENT TICKER (text comes from the database) */}
+      <AnnouncementTicker />
 
       {/* 2. MAIN BRAND HEADER */}
       <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between gap-4">

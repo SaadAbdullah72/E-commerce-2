@@ -1,112 +1,135 @@
-import React, { useState, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, Zap, ArrowRight } from 'lucide-react';
+import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 
+import { useLiveBanners } from '../../features/banners/hooks/useLiveBanners';
+import { themeFor } from '../../features/banners/lib/themes';
+
+const ROTATE_MS = 4500;
+const FRAME =
+  'relative w-full h-[220px] sm:h-[300px] md:h-[360px] overflow-hidden rounded-2xl shadow-lg my-4';
+
+/**
+ * The big banner on the home page. The slides come from the database (Admin > Banners).
+ * While they load a grey placeholder holds the space; with none live, or if the request
+ * fails, the banner is left out rather than showing made-up content.
+ */
 export default function HeroSlider() {
-  const [currentSlide, setCurrentSlide] = useState(0);
+  const { data: slides, isPending } = useLiveBanners('hero');
+  const [requested, setRequested] = useState(0);
 
-  const slides = [
-    {
-      id: 1,
-      badge: "SHOPYARO EXCLUSIVE",
-      title: "UP TO 90% OFF",
-      subtitle: "Factory Direct Clearance Deals",
-      buttonText: "Shop Deals Now",
-      bgGradient: "from-blue-700 via-indigo-800 to-blue-900",
-      accentColor: "bg-orange-500",
-      image: "https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?auto=format&fit=crop&w=800&q=80",
-    },
-    {
-      id: 2,
-      badge: "LIGHTNING SALE",
-      title: "UNDER $9.99",
-      subtitle: "Trending Tech & Smart Gadgets",
-      buttonText: "Claim Discount",
-      bgGradient: "from-orange-600 via-amber-600 to-orange-700",
-      accentColor: "bg-blue-600",
-      image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=800&q=80",
-    },
-    {
-      id: 3,
-      badge: "EXPRESS DELIVERY",
-      title: "FREE SHIPPING",
-      subtitle: "On All Orders Today • 90-Day Returns",
-      buttonText: "Explore More",
-      bgGradient: "from-zinc-900 via-slate-800 to-zinc-900",
-      accentColor: "bg-orange-500",
-      image: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=800&q=80",
-    },
-  ];
+  const count = slides?.length ?? 0;
+  // If slides are removed while the page is open, stay on a slide that still exists.
+  const current = count > 0 ? Math.min(requested, count - 1) : 0;
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentSlide((prev) => (prev === slides.length - 1 ? 0 : prev + 1));
-    }, 4500);
+    if (count < 2) return undefined;
+    const timer = setInterval(
+      () => setRequested((index) => (index >= count - 1 ? 0 : index + 1)),
+      ROTATE_MS,
+    );
     return () => clearInterval(timer);
-  }, [slides.length]);
+  }, [count]);
+
+  if (isPending) {
+    return (
+      <div
+        role="status"
+        aria-label="Loading banner"
+        className={`${FRAME} animate-pulse bg-gray-200`}
+      />
+    );
+  }
+  if (count === 0) return null;
+
+  const go = (index) => setRequested((index + count) % count);
 
   return (
-    <div className="relative w-full h-[220px] sm:h-[300px] md:h-[360px] overflow-hidden rounded-2xl shadow-lg my-4 bg-gray-900">
-      {slides.map((slide, index) => (
-        <div
-          key={slide.id}
-          className={`absolute inset-0 transition-opacity duration-700 ease-in-out flex items-center justify-between px-6 sm:px-12 md:px-16 ${
-            index === currentSlide ? 'opacity-100 z-10' : 'opacity-0 z-0'
-          } bg-gradient-to-r ${slide.bgGradient}`}
-        >
-          {/* Text Content */}
-          <div className="max-w-xl text-white z-20 space-y-2 sm:space-y-3">
-            <span className={`inline-block text-[10px] sm:text-xs font-black uppercase px-2.5 py-0.5 rounded-full ${slide.accentColor} tracking-wider`}>
-              {slide.badge}
-            </span>
-            <h2 className="text-2xl sm:text-4xl md:text-5xl font-black tracking-tight leading-none text-white">
-              {slide.title}
-            </h2>
-            <p className="text-xs sm:text-sm font-medium text-gray-200">
-              {slide.subtitle}
-            </p>
-            <button className="mt-2 inline-flex items-center gap-1.5 bg-white text-gray-900 hover:bg-orange-500 hover:text-white font-extrabold text-xs sm:text-sm px-4 sm:px-6 py-2 rounded-full shadow-md transition-all duration-200">
-              <span>{slide.buttonText}</span>
-              <ArrowRight size={14} />
-            </button>
-          </div>
-
-          {/* Sliding Product Image */}
-          <div className="hidden sm:block relative z-20 w-48 h-48 md:w-64 md:h-64 rounded-xl overflow-hidden shadow-2xl border-2 border-white/20 transform rotate-2 hover:rotate-0 transition-transform duration-300">
-            <img
-              src={slide.image}
-              alt={slide.title}
-              className="w-full h-full object-cover"
-            />
-          </div>
-        </div>
-      ))}
-
-      {/* Navigation Controls */}
-      <button
-        onClick={() => setCurrentSlide(currentSlide === 0 ? slides.length - 1 : currentSlide - 1)}
-        className="absolute left-3 top-1/2 -translate-y-1/2 z-30 bg-black/30 hover:bg-black/60 text-white p-1.5 sm:p-2 rounded-full backdrop-blur transition"
-      >
-        <ChevronLeft size={20} />
-      </button>
-      <button
-        onClick={() => setCurrentSlide(currentSlide === slides.length - 1 ? 0 : currentSlide + 1)}
-        className="absolute right-3 top-1/2 -translate-y-1/2 z-30 bg-black/30 hover:bg-black/60 text-white p-1.5 sm:p-2 rounded-full backdrop-blur transition"
-      >
-        <ChevronRight size={20} />
-      </button>
-
-      {/* Dots Indicator */}
-      <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-30 flex space-x-2">
-        {slides.map((_, idx) => (
-          <button
-            key={idx}
-            onClick={() => setCurrentSlide(idx)}
-            className={`w-2 h-2 rounded-full transition-all ${
-              idx === currentSlide ? 'bg-orange-500 w-6' : 'bg-white/50'
+    <div
+      className={`${FRAME} bg-gray-900`}
+      aria-roledescription="carousel"
+      aria-label="Featured offers"
+    >
+      {slides.map((slide, index) => {
+        const theme = themeFor(slide.theme);
+        return (
+          <div
+            key={slide.id}
+            aria-hidden={index !== current}
+            className={`absolute inset-0 flex items-center justify-between bg-gradient-to-r px-6 transition-opacity duration-700 ease-in-out sm:px-12 md:px-16 ${theme.gradient} ${
+              index === current ? 'z-10 opacity-100' : 'pointer-events-none z-0 opacity-0'
             }`}
-          />
-        ))}
-      </div>
+          >
+            <div className="z-20 max-w-xl space-y-2 text-white sm:space-y-3">
+              {slide.badge && (
+                <span
+                  className={`inline-block rounded-full px-2.5 py-0.5 text-[10px] font-black uppercase sm:text-xs ${theme.accent} tracking-wider`}
+                >
+                  {slide.badge}
+                </span>
+              )}
+              <h2 className="text-2xl leading-none font-black tracking-tight text-white sm:text-4xl md:text-5xl">
+                {slide.title}
+              </h2>
+              {slide.subtitle && (
+                <p className="text-xs font-medium text-gray-200 sm:text-sm">{slide.subtitle}</p>
+              )}
+              {slide.buttonText && slide.linkPath && (
+                <Link
+                  to={slide.linkPath}
+                  tabIndex={index === current ? 0 : -1}
+                  className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-white px-4 py-2 text-xs font-extrabold text-gray-900 shadow-md transition-all duration-200 hover:bg-orange-500 hover:text-white sm:px-6 sm:text-sm"
+                >
+                  <span>{slide.buttonText}</span>
+                  <ArrowRight size={14} aria-hidden="true" />
+                </Link>
+              )}
+            </div>
+
+            {slide.imageUrl && (
+              <div className="relative z-20 hidden h-48 w-48 rotate-2 transform overflow-hidden rounded-xl border-2 border-white/20 shadow-2xl transition-transform duration-300 hover:rotate-0 sm:block md:h-64 md:w-64">
+                <img src={slide.imageUrl} alt="" className="h-full w-full object-cover" />
+              </div>
+            )}
+          </div>
+        );
+      })}
+
+      {count > 1 && (
+        <>
+          <button
+            type="button"
+            aria-label="Previous slide"
+            onClick={() => go(current - 1)}
+            className="absolute top-1/2 left-3 z-30 -translate-y-1/2 cursor-pointer rounded-full bg-black/30 p-1.5 text-white backdrop-blur transition hover:bg-black/60 sm:p-2"
+          >
+            <ChevronLeft size={20} />
+          </button>
+          <button
+            type="button"
+            aria-label="Next slide"
+            onClick={() => go(current + 1)}
+            className="absolute top-1/2 right-3 z-30 -translate-y-1/2 cursor-pointer rounded-full bg-black/30 p-1.5 text-white backdrop-blur transition hover:bg-black/60 sm:p-2"
+          >
+            <ChevronRight size={20} />
+          </button>
+
+          <div className="absolute bottom-3 left-1/2 z-30 flex -translate-x-1/2 space-x-2">
+            {slides.map((slide, index) => (
+              <button
+                type="button"
+                key={slide.id}
+                aria-label={`Go to slide ${index + 1}`}
+                aria-current={index === current}
+                onClick={() => go(index)}
+                className={`h-2 cursor-pointer rounded-full transition-all ${
+                  index === current ? 'w-6 bg-orange-500' : 'w-2 bg-white/50'
+                }`}
+              />
+            ))}
+          </div>
+        </>
+      )}
     </div>
   );
 }
