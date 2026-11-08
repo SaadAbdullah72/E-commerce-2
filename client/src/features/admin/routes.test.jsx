@@ -21,6 +21,7 @@ const service = vi.hoisted(() => ({
   listAdminCategories: vi.fn(),
 }));
 vi.mock('./services/adminService', () => service);
+vi.mock('@/lib/supabase/client', () => ({ supabase: {} }));
 
 import AdminRoutes from './routes';
 
@@ -180,11 +181,21 @@ describe('products', () => {
     expect(screen.getByRole('button', { name: /try again/i })).toBeInTheDocument();
   });
 
-  it('has no edit or delete controls yet (read-only)', async () => {
+  it('offers add, edit and deactivate, but never a hard delete', async () => {
     service.listAdminProducts.mockResolvedValue([product()]);
     renderAdmin('/admin/products');
     await screen.findByText('Wireless Earbuds');
-    expect(screen.queryByRole('button', { name: /edit|delete|add/i })).not.toBeInTheDocument();
+
+    expect(screen.getByRole('link', { name: 'Add product' })).toHaveAttribute(
+      'href',
+      '/admin/products/new',
+    );
+    expect(screen.getByRole('link', { name: 'Edit Wireless Earbuds' })).toHaveAttribute(
+      'href',
+      '/admin/products/p1',
+    );
+    expect(screen.getByRole('button', { name: 'Deactivate Wireless Earbuds' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^delete/i })).not.toBeInTheDocument();
   });
 });
 

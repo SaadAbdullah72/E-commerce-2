@@ -4,6 +4,7 @@ import AdminLayout from './components/AdminLayout';
 import CategoriesPage from './pages/CategoriesPage';
 import ComingSoonPage from './pages/ComingSoonPage';
 import OverviewPage from './pages/OverviewPage';
+import ProductEditPage from './pages/ProductEditPage';
 import ProductsPage from './pages/ProductsPage';
 
 /** Mounted at /admin/* behind AdminRoute. */
@@ -13,6 +14,8 @@ export default function AdminRoutes() {
       <Route element={<AdminLayout />}>
         <Route index element={<OverviewPage />} />
         <Route path="products" element={<ProductsPage />} />
+        <Route path="products/new" element={<ProductEditPage />} />
+        <Route path="products/:id" element={<ProductEditPage />} />
         <Route path="categories" element={<CategoriesPage />} />
         <Route path="orders" element={<ComingSoonPage />} />
         <Route path="coupons" element={<ComingSoonPage />} />

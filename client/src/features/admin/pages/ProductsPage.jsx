@@ -1,11 +1,14 @@
 import { useState } from 'react';
+import { Link, useLocation } from 'react-router-dom';
 
 import ProductImage from '@/features/catalog/components/ProductImage';
 import { formatMoney } from '@/shared/lib/formatMoney';
 
+import ConfirmDialog from '../components/ConfirmDialog';
 import QueryState from '../components/QueryState';
 import StatusBadge from '../components/StatusBadge';
 import { useAdminProducts } from '../hooks/useAdminData';
+import { useSetProductActive } from '../hooks/useAdminMutations';
 import { stockStatus } from '../lib/adminStats';
 
 const STOCK_BADGE = {
@@ -16,8 +19,12 @@ const STOCK_BADGE = {
 
 export default function ProductsPage() {
   const query = useAdminProducts();
+  const setActive = useSetProductActive();
+  const location = useLocation();
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('all');
+  const [pending, setPending] = useState(null); // the product being deactivated / restored
+  const [notice, setNotice] = useState(location.state?.notice ?? '');
 
   const needle = search.trim().toLowerCase();
   const products = (query.data ?? []).filter(
@@ -26,14 +33,33 @@ export default function ProductsPage() {
       (!needle || product.title.toLowerCase().includes(needle)),
   );
 
+  const confirm = () => {
+    const target = pending;
+    setActive.mutate(
+      { id: target.id, isActive: !target.isActive },
+      {
+        onSuccess: () => {
+          setNotice(
+            target.isActive
+              ? `"${target.title}" was deactivated.`
+              : `"${target.title}" was restored.`,
+          );
+          setPending(null);
+        },
+      },
+    );
+  };
+
   return (
     <section className="space-y-4">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h2 className="text-lg font-black text-gray-900">Products</h2>
-          <p className="text-xs text-gray-500">Read-only for now. Editing arrives in Phase 2.</p>
+          <p className="text-xs text-gray-500">
+            Deactivated products are hidden from the shop but never deleted.
+          </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <input
             type="search"
             value={search}
@@ -52,8 +78,30 @@ export default function ProductsPage() {
             <option value="active">Active</option>
             <option value="inactive">Inactive</option>
           </select>
+          <Link
+            to="/admin/products/new"
+            className="rounded-md bg-blue-600 px-3 py-1.5 text-sm font-bold text-white hover:bg-blue-700"
+          >
+            Add product
+          </Link>
         </div>
       </div>
+
+      {notice && (
+        <p
+          role="status"
+          className="flex items-center justify-between rounded-md border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-800"
+        >
+          {notice}
+          <button
+            type="button"
+            onClick={() => setNotice('')}
+            className="cursor-pointer text-xs font-bold underline"
+          >
+            Dismiss
+          </button>
+        </p>
+      )}
 
       <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white shadow-xs">
         <QueryState
@@ -72,6 +120,9 @@ export default function ProductsPage() {
                 <th className="px-4 py-2 font-semibold">Price</th>
                 <th className="px-4 py-2 font-semibold">Stock</th>
                 <th className="px-4 py-2 font-semibold">Status</th>
+                <th className="px-4 py-2 font-semibold">
+                  <span className="sr-only">Actions</span>
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -102,6 +153,28 @@ export default function ProductsPage() {
                         {product.isActive ? 'Active' : 'Inactive'}
                       </StatusBadge>
                     </td>
+                    <td className="px-4 py-2 text-right whitespace-nowrap">
+                      <Link
+                        to={`/admin/products/${product.id}`}
+                        aria-label={`Edit ${product.title}`}
+                        className="mr-3 text-xs font-bold text-blue-600 hover:underline"
+                      >
+                        Edit
+                      </Link>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setActive.reset();
+                          setPending(product);
+                        }}
+                        aria-label={`${product.isActive ? 'Deactivate' : 'Restore'} ${product.title}`}
+                        className={`cursor-pointer text-xs font-bold hover:underline ${
+                          product.isActive ? 'text-red-600' : 'text-green-700'
+                        }`}
+                      >
+                        {product.isActive ? 'Deactivate' : 'Restore'}
+                      </button>
+                    </td>
                   </tr>
                 );
               })}
@@ -109,6 +182,29 @@ export default function ProductsPage() {
           </table>
         </QueryState>
       </div>
+
+      {pending && (
+        <ConfirmDialog
+          title={pending.isActive ? 'Deactivate this product?' : 'Restore this product?'}
+          confirmLabel={pending.isActive ? 'Deactivate' : 'Restore'}
+          danger={pending.isActive}
+          busy={setActive.isPending}
+          onConfirm={confirm}
+          onCancel={() => setPending(null)}
+        >
+          <p>
+            <strong>{pending.title}</strong>{' '}
+            {pending.isActive
+              ? 'will be hidden from the shop. Nothing is deleted, and you can restore it any time.'
+              : 'will appear in the shop again.'}
+          </p>
+          {setActive.isError && (
+            <p role="alert" className="mt-2 text-red-600">
+              {setActive.error.message}
+            </p>
+          )}
+        </ConfirmDialog>
+      )}
     </section>
   );
 }
