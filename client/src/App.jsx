@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { lazy, Suspense, useState, useEffect } from 'react';
 import { Routes, Route, useNavigate, useParams, Navigate, useLocation } from 'react-router-dom';
 import Navbar from './components/layout/Navbar';
 import HomePage from './pages/HomePage';
@@ -20,7 +20,10 @@ import PrivacyPage from './features/legal/pages/PrivacyPage';
 import TermsPage from './features/legal/pages/TermsPage';
 import ProfilePage from './pages/ProfilePage';
 import MyOrdersPage from './pages/MyOrdersPage';
-import AdminDashboard from './pages/AdminDashboard';
+import AuthLoading from './features/auth/components/AuthLoading';
+
+// The admin area is loaded only when an admin visits it, which keeps the storefront bundle small.
+const AdminRoutes = lazy(() => import('./features/admin/routes'));
 
 // Old /signin links carry ?redirect=...; keep it (SignupPage validates it against an allow-list).
 function LegacySigninRedirect() {
@@ -157,12 +160,14 @@ export default function App() {
         />
 
         <Route 
-          path="/admin" 
+          path="/admin/*"
           element={
             <AdminRoute>
-              <AdminDashboard onLogout={handleLogout} />
+              <Suspense fallback={<AuthLoading />}>
+                <AdminRoutes />
+              </Suspense>
             </AdminRoute>
-          } 
+          }
         />
       </Routes>
 
