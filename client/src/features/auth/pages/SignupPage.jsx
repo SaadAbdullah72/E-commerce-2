@@ -8,6 +8,8 @@ import AuthLayout from '../components/AuthLayout';
 import CheckEmailNotice from '../components/CheckEmailNotice';
 import ConfirmPasswordField from '../components/ConfirmPasswordField';
 import FormAlert from '../components/FormAlert';
+import GoogleButton from '../components/GoogleButton';
+import OrDivider from '../components/OrDivider';
 import PasswordField from '../components/PasswordField';
 import PasswordStrength from '../components/PasswordStrength';
 import TextField from '../components/TextField';
@@ -268,6 +270,34 @@ export default function SignupPage() {
           )}
         </button>
       </form>
+
+      <OrDivider />
+      <GoogleButton
+        redirectPath={searchParams.get('redirect')}
+        onError={(error) => setFormError(error.message)}
+        disabled={isSubmitting}
+      />
+      <p className="mt-2 text-center text-[11px] text-gray-500">
+        By continuing with Google you agree to our{' '}
+        <Link
+          to="/terms"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="font-bold text-blue-600 hover:underline"
+        >
+          Terms
+        </Link>{' '}
+        and{' '}
+        <Link
+          to="/privacy"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="font-bold text-blue-600 hover:underline"
+        >
+          Privacy
+        </Link>
+        .
+      </p>
 
       <div className="mt-4 flex items-center justify-center gap-2 text-[11px] text-gray-400">
         <ShieldCheck size={14} className="text-emerald-600" aria-hidden="true" />

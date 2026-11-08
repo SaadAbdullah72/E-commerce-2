@@ -4,6 +4,8 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 
 import AuthLayout from '../components/AuthLayout';
 import FormAlert from '../components/FormAlert';
+import GoogleButton from '../components/GoogleButton';
+import OrDivider from '../components/OrDivider';
 import PasswordField from '../components/PasswordField';
 import TextField from '../components/TextField';
 import { useAuth } from '../hooks/useAuth';
@@ -186,6 +188,13 @@ export default function LoginPage() {
           )}
         </button>
       </form>
+
+      <OrDivider />
+      <GoogleButton
+        redirectPath={searchParams.get('redirect')}
+        onError={setFormError}
+        disabled={isSubmitting}
+      />
     </AuthLayout>
   );
 }

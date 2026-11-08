@@ -11,6 +11,7 @@ import AdminRoute from './features/auth/components/AdminRoute';
 import ProtectedRoute from './features/auth/components/ProtectedRoute';
 import { useAuth } from './features/auth/hooks/useAuth';
 import LoginPage from './features/auth/pages/LoginPage';
+import AuthCallbackPage from './features/auth/pages/AuthCallbackPage';
 import AuthConfirmPage from './features/auth/pages/AuthConfirmPage';
 import ForgotPasswordPage from './features/auth/pages/ForgotPasswordPage';
 import ResetPasswordPage from './features/auth/pages/ResetPasswordPage';
@@ -148,6 +149,7 @@ export default function App() {
         {/* Legacy URL kept so old links (e.g. from the login page) still work. */}
         <Route path="/signin" element={<LegacySigninRedirect />} />
         <Route path="/signup" element={<SignupPage />} />
+        <Route path="/auth/callback" element={<AuthCallbackPage />} />
         <Route path="/auth/confirm" element={<AuthConfirmPage />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/auth/reset" element={<ResetPasswordPage />} />
