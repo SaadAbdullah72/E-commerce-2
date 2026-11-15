@@ -79,14 +79,14 @@ describe('AuthCallbackPage', () => {
     expect(await screen.findByTestId('where')).toHaveTextContent('/shipping');
   });
 
-  it('sends admins to /admin whatever the remembered destination', async () => {
+  it('sends admins to the remembered destination, same as customers', async () => {
     visit('?code=abc');
     mocks.auth.status = 'authenticated';
     mocks.auth.isAdmin = true;
     mocks.completeOAuthCallback.mockResolvedValue({ ok: true });
     renderPage();
 
-    expect(await screen.findByTestId('where')).toHaveTextContent('/admin');
+    expect(await screen.findByTestId('where')).toHaveTextContent('/shipping');
   });
 
   it('shows a calm "cancelled" screen when the user backs out at Google', async () => {

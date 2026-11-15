@@ -147,10 +147,24 @@ describe('LoginPage', () => {
     expect(screen.getByTestId('where')).toHaveTextContent('/');
   });
 
-  it('sends admins to /admin', () => {
+  it('sends admins to the same place as customers, not to /admin', () => {
     mocks.auth.status = 'authenticated';
     mocks.auth.isAdmin = true;
     renderAt('/login?redirect=shipping');
+    expect(screen.getByTestId('where')).toHaveTextContent('/shipping');
+  });
+
+  it('sends an admin home when there is no redirect', () => {
+    mocks.auth.status = 'authenticated';
+    mocks.auth.isAdmin = true;
+    renderAt('/login');
+    expect(screen.getByTestId('where')).toHaveTextContent(/^\/$/);
+  });
+
+  it('still honours an explicit /admin redirect for an admin', () => {
+    mocks.auth.status = 'authenticated';
+    mocks.auth.isAdmin = true;
+    renderAt('/login?redirect=admin');
     expect(screen.getByTestId('where')).toHaveTextContent('/admin');
   });
 

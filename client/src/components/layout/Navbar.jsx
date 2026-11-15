@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import AnnouncementTicker from '../../features/banners/components/AnnouncementTicker';
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
-import { ShoppingCart, Search, User, Zap, X } from 'lucide-react';
+import { ShoppingCart, Search, ShieldCheck, User, Zap, X } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../features/auth/hooks/useAuth';
 import logo from '../../assets/Logo.png';
@@ -11,7 +11,7 @@ export default function Navbar({ onSearch, onSelectCategory }) {
   const [searchParams, setSearchParams] = useSearchParams();
   const location = useLocation();
   const navigate = useNavigate();
-  const { status, account } = useAuth();
+  const { status, account, isAdmin } = useAuth();
 
   const isHomePage = location.pathname === '/';
   const [searchTerm, setSearchTerm] = useState('');
@@ -135,6 +135,17 @@ export default function Navbar({ onSearch, onSelectCategory }) {
 
         {/* User & Cart Actions */}
         <div className="flex items-center space-x-6">
+          {/* Convenience link only. Real protection is AdminRoute, RLS and is_admin(). */}
+          {status === 'authenticated' && isAdmin && (
+            <button
+              type="button"
+              onClick={() => navigate('/admin')}
+              className="flex flex-col items-center text-gray-700 hover:text-blue-600 transition group cursor-pointer"
+            >
+              <ShieldCheck size={22} className="group-hover:scale-110 transition-transform" />
+              <span className="text-[11px] font-bold mt-0.5">Admin Panel</span>
+            </button>
+          )}
           <button 
             onClick={() => navigate(status === 'authenticated' ? '/profile' : '/login')}
             className="flex flex-col items-center text-gray-700 hover:text-blue-600 transition group cursor-pointer"

@@ -1,6 +1,6 @@
-import { LogOut, Menu, X } from 'lucide-react';
+import { LogOut, Menu, Store, X } from 'lucide-react';
 import { useState } from 'react';
-import { Outlet } from 'react-router-dom';
+import { Link, Outlet } from 'react-router-dom';
 
 import { useAuth } from '@/features/auth/hooks/useAuth';
 
@@ -31,6 +31,12 @@ export default function AdminLayout() {
               {user.email}
             </span>
           )}
+          <Link
+            to="/"
+            className="flex items-center gap-1.5 rounded-md border border-gray-200 px-3 py-1.5 text-xs font-bold text-gray-700 hover:bg-gray-100"
+          >
+            <Store size={14} aria-hidden="true" /> Back to Store
+          </Link>
           <button
             type="button"
             onClick={() => signOut()}

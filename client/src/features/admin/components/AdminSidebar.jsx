@@ -1,4 +1,5 @@
-import { NavLink } from 'react-router-dom';
+import { Store } from 'lucide-react';
+import { Link, NavLink } from 'react-router-dom';
 
 import { ADMIN_SECTIONS } from '../lib/adminStats';
 import StatusBadge from './StatusBadge';
@@ -12,6 +13,13 @@ const linkClass = ({ isActive }) =>
 export default function AdminSidebar({ onNavigate }) {
   return (
     <nav aria-label="Admin" className="space-y-1">
+      <Link
+        to="/"
+        onClick={onNavigate}
+        className="mb-2 flex items-center gap-2 rounded-lg border border-gray-200 px-3 py-2 text-sm font-semibold text-gray-700 transition hover:bg-gray-100"
+      >
+        <Store size={16} aria-hidden="true" /> Back to Store
+      </Link>
       {ADMIN_SECTIONS.map((section) =>
         section.ready ? (
           <NavLink

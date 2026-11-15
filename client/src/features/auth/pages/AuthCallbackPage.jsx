@@ -28,12 +28,12 @@ function readCallbackParams() {
  *
  * - Runs once (ref guard, so React StrictMode cannot run it twice).
  * - Waits for the Supabase client to finish the code exchange BEFORE cleaning the URL.
- * - Leaves only after the provider has loaded the user's role, so admins go to /admin.
+ * - Leaves only once the session is ready. Admins go to the same place as customers.
  * - The destination comes from sessionStorage and is allow-listed, never from the URL.
  */
 export default function AuthCallbackPage() {
   const navigate = useNavigate();
-  const { status, isAdmin } = useAuth();
+  const { status } = useAuth();
   const [params] = useState(readCallbackParams);
   const [failure, setFailure] = useState(null); // 'cancelled' | 'failed'
   const [destination, setDestination] = useState(null);
@@ -53,9 +53,9 @@ export default function AuthCallbackPage() {
 
   useEffect(() => {
     if (destination && status === 'authenticated') {
-      navigate(isAdmin ? '/admin' : destination, { replace: true });
+      navigate(destination, { replace: true });
     }
-  }, [destination, status, isAdmin, navigate]);
+  }, [destination, status, navigate]);
 
   if (failure) {
     const copy = FAILURE_COPY[failure];

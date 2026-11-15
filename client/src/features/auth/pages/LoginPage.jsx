@@ -28,7 +28,7 @@ import { validateEmail } from '../validation/signup';
 export default function LoginPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { status, isAdmin } = useAuth();
+  const { status } = useAuth();
   const { visible, toggle } = usePasswordVisibility();
 
   const [email, setEmail] = useState('');
@@ -45,9 +45,9 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (status === 'authenticated') {
-      navigate(isAdmin ? '/admin' : redirectTo, { replace: true });
+      navigate(redirectTo, { replace: true });
     }
-  }, [status, isAdmin, redirectTo, navigate]);
+  }, [status, redirectTo, navigate]);
 
   // A disabled input cannot take focus, so focus moves here, after React re-enables them.
   useEffect(() => {

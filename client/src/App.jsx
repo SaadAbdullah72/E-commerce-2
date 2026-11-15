@@ -1,4 +1,4 @@
-import React, { lazy, Suspense, useState, useEffect } from 'react';
+import React, { lazy, Suspense, useState } from 'react';
 import { Routes, Route, useNavigate, useParams, Navigate, useLocation } from 'react-router-dom';
 import Navbar from './components/layout/Navbar';
 import HomePage from './pages/HomePage';
@@ -48,7 +48,7 @@ function CategoryRouteWrapper() {
 export default function App() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { status, isAdmin, signOut } = useAuth();
+  const { status, signOut } = useAuth();
   const isLoggedIn = status === 'authenticated';
   const [selectedCategory, setSelectedCategory] = useState(null);
 
@@ -56,13 +56,6 @@ export default function App() {
 
   // Check if current route is under the admin dashboard
   const isAdminRoute = location.pathname.startsWith('/admin');
-
-  // If logged in as admin, force direct access to /admin dashboard (admin cannot shop)
-  useEffect(() => {
-    if (isLoggedIn && isAdmin && !location.pathname.startsWith('/admin')) {
-      navigate('/admin', { replace: true });
-    }
-  }, [isLoggedIn, isAdmin, location.pathname, navigate]);
 
   const handleSelectCategory = (catName) => {
     if (!catName) {
@@ -89,8 +82,8 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900">
-      {/* Conditionally render Navbar ONLY on storefront routes and for non-admins */}
-      {!isAdminRoute && !isAdmin && (
+      {/* The storefront Navbar shows on shop pages for everyone, admins included */}
+      {!isAdminRoute && (
         <Navbar onSelectCategory={handleSelectCategory} />
       )}
 
@@ -171,8 +164,8 @@ export default function App() {
         />
       </Routes>
 
-      {/* Conditionally render CartDrawer ONLY on storefront routes and for non-admins */}
-      {!isAdminRoute && !isAdmin && (
+      {/* The cart drawer shows on shop pages for everyone, admins included */}
+      {!isAdminRoute && (
         <CartDrawer
           onCheckout={() => navigate(isLoggedIn ? '/shipping' : '/login?redirect=shipping')}
         />
