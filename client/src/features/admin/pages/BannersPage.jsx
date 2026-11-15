@@ -4,10 +4,16 @@ import { Link, useLocation } from 'react-router-dom';
 
 import BannerPreview from '../components/BannerPreview';
 import ConfirmDialog from '../components/ConfirmDialog';
+import DeleteButton from '../components/DeleteButton';
+import DeleteConfirm from '../components/DeleteConfirm';
 import QueryState from '../components/QueryState';
 import StatusBadge from '../components/StatusBadge';
 import { useAdminBanners } from '../hooks/useAdminData';
-import { useSetBannerActive, useSwapBannerOrder } from '../hooks/useAdminMutations';
+import {
+  useDeleteBanner,
+  useSetBannerActive,
+  useSwapBannerOrder,
+} from '../hooks/useAdminMutations';
 import { MAX_ACTIVE_BANNERS } from '../lib/bannerSchema';
 
 const KINDS = [
@@ -32,7 +38,9 @@ function BannerList({ kind, onNotice }) {
   const query = useAdminBanners(kind.key);
   const setActive = useSetBannerActive();
   const swap = useSwapBannerOrder();
+  const remove = useDeleteBanner();
   const [pending, setPending] = useState(null);
+  const [deleting, setDeleting] = useState(null);
 
   const banners = query.data ?? [];
   const activeCount = banners.filter((banner) => banner.isActive).length;
@@ -50,6 +58,16 @@ function BannerList({ kind, onNotice }) {
         },
       },
     );
+  };
+
+  const confirmDelete = () => {
+    const target = deleting;
+    remove.mutate(target.id, {
+      onSuccess: () => {
+        onNotice(`"${target.title}" was deleted.`);
+        setDeleting(null);
+      },
+    });
   };
 
   const move = (index, direction) => {
@@ -70,7 +88,7 @@ function BannerList({ kind, onNotice }) {
     <div className="space-y-3">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-xs text-gray-500">
-          {activeCount} of {limit} active. Nothing is deleted, only paused.
+          {activeCount} of {limit} active. Pause hides a banner; delete removes it for good.
         </p>
         <Link
           to={`/admin/banners/new?kind=${kind.key}`}
@@ -151,6 +169,13 @@ function BannerList({ kind, onNotice }) {
                     >
                       {banner.isActive ? 'Pause' : 'Resume'}
                     </button>
+                    <DeleteButton
+                      label={banner.title}
+                      onClick={() => {
+                        remove.reset();
+                        setDeleting(banner);
+                      }}
+                    />
                   </div>
                 </li>
               );
@@ -182,6 +207,17 @@ function BannerList({ kind, onNotice }) {
             </p>
           )}
         </ConfirmDialog>
+      )}
+
+      {deleting && (
+        <DeleteConfirm
+          name={deleting.title}
+          kind={kind.singular}
+          busy={remove.isPending}
+          error={remove.isError ? remove.error.message : ''}
+          onConfirm={confirmDelete}
+          onCancel={() => setDeleting(null)}
+        />
       )}
     </div>
   );

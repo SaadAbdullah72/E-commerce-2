@@ -2,10 +2,16 @@ import { useState } from 'react';
 
 import CategoryForm from '../components/CategoryForm';
 import ConfirmDialog from '../components/ConfirmDialog';
+import DeleteButton from '../components/DeleteButton';
+import DeleteConfirm from '../components/DeleteConfirm';
 import QueryState from '../components/QueryState';
 import StatusBadge from '../components/StatusBadge';
 import { useAdminCategories, useAdminCategory } from '../hooks/useAdminData';
-import { useSaveCategory, useSetCategoryActive } from '../hooks/useAdminMutations';
+import {
+  useDeleteCategory,
+  useSaveCategory,
+  useSetCategoryActive,
+} from '../hooks/useAdminMutations';
 import { countActiveProductsInCategory } from '../services/categoryAdminService';
 
 /** The add / edit dialog. For an existing category it loads the full record first. */
@@ -63,8 +69,10 @@ function CategoryDialog({ id, onClose, onSaved }) {
 export default function CategoriesPage() {
   const query = useAdminCategories();
   const setActive = useSetCategoryActive();
+  const remove = useDeleteCategory();
   const [dialog, setDialog] = useState(null); // null | { id: string | null }
   const [pending, setPending] = useState(null); // { category, liveProducts }
+  const [deleting, setDeleting] = useState(null); // the category being deleted
   const [notice, setNotice] = useState('');
 
   const askToToggle = async (category) => {
@@ -90,13 +98,24 @@ export default function CategoriesPage() {
     );
   };
 
+  const confirmDelete = () => {
+    const target = deleting;
+    remove.mutate(target.id, {
+      onSuccess: () => {
+        setNotice(`"${target.name}" was deleted.`);
+        setDeleting(null);
+      },
+    });
+  };
+
   return (
     <section className="space-y-4">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h2 className="text-lg font-black text-gray-900">Categories</h2>
           <p className="text-xs text-gray-500">
-            Deactivated categories are hidden from the shop but never deleted.
+            Deactivated categories are hidden from the shop. A category can only be deleted when it
+            has no products.
           </p>
         </div>
         <button
@@ -173,6 +192,13 @@ export default function CategoriesPage() {
                     >
                       {category.isActive ? 'Deactivate' : 'Restore'}
                     </button>
+                    <DeleteButton
+                      label={category.name}
+                      onClick={() => {
+                        remove.reset();
+                        setDeleting(category);
+                      }}
+                    />
                   </td>
                 </tr>
               ))}
@@ -220,6 +246,17 @@ export default function CategoriesPage() {
             </p>
           )}
         </ConfirmDialog>
+      )}
+
+      {deleting && (
+        <DeleteConfirm
+          name={deleting.name}
+          kind="category"
+          busy={remove.isPending}
+          error={remove.isError ? remove.error.message : ''}
+          onConfirm={confirmDelete}
+          onCancel={() => setDeleting(null)}
+        />
       )}
     </section>
   );

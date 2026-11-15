@@ -86,3 +86,16 @@ export async function uploadImage(file, folder, options = {}) {
   }
   return { url: result.secure_url, publicId: result.public_id };
 }
+
+/**
+ * Ask the server to remove pictures that are no longer used from Cloudinary. It works from a
+ * database queue, so nothing is sent from here. This is housekeeping: it never throws, and a
+ * miss is simply retried on the next call.
+ */
+export async function requestAssetCleanup() {
+  try {
+    await supabase.functions.invoke('delete-assets', { body: {} });
+  } catch {
+    // Nothing to do: the queue keeps the pictures until the next attempt.
+  }
+}

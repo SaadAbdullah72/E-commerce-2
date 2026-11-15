@@ -2,7 +2,7 @@ import { supabase } from '@/lib/supabase/client';
 
 import { toLocalInput } from '../lib/dates';
 import { minorToInput } from '../lib/money';
-import { friendlySaveError } from './saveErrors';
+import { friendlyDeleteError, friendlySaveError } from './saveErrors';
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -89,4 +89,11 @@ export async function listAdminDealTags() {
     .order('sort_order', { ascending: true });
   if (error) throw new Error("We couldn't load the deal tags. Please try again.");
   return data.map((row) => ({ id: row.id, name: row.name, isActive: row.is_active }));
+}
+
+/** Permanently delete. The database refuses when the product is still in use. */
+export async function deleteProduct(id) {
+  const { data, error } = await supabase.from('products').delete().eq('id', id).select('id');
+  // Row-level security hides rows silently, so "nothing deleted" is a permission failure.
+  if (error || !data?.length) throw new Error(friendlyDeleteError(error, 'product'));
 }

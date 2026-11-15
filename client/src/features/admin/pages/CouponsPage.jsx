@@ -4,10 +4,12 @@ import { Link, useLocation } from 'react-router-dom';
 import { formatMoney } from '@/shared/lib/formatMoney';
 
 import ConfirmDialog from '../components/ConfirmDialog';
+import DeleteButton from '../components/DeleteButton';
+import DeleteConfirm from '../components/DeleteConfirm';
 import QueryState from '../components/QueryState';
 import StatusBadge from '../components/StatusBadge';
 import { useAdminCoupons } from '../hooks/useAdminData';
-import { useSetCouponActive } from '../hooks/useAdminMutations';
+import { useDeleteCoupon, useSetCouponActive } from '../hooks/useAdminMutations';
 import { couponStatus, describeDiscount } from '../lib/couponSchema';
 
 const STATUS = {
@@ -32,10 +34,12 @@ function validity(coupon) {
 export default function CouponsPage() {
   const query = useAdminCoupons();
   const setActive = useSetCouponActive();
+  const remove = useDeleteCoupon();
   const location = useLocation();
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('all');
   const [pending, setPending] = useState(null);
+  const [deleting, setDeleting] = useState(null); // the coupon being deleted
   const [notice, setNotice] = useState(location.state?.notice ?? '');
 
   const needle = search.trim().toUpperCase();
@@ -59,13 +63,24 @@ export default function CouponsPage() {
     );
   };
 
+  const confirmDelete = () => {
+    const target = deleting;
+    remove.mutate(target.id, {
+      onSuccess: () => {
+        setNotice(`${target.code} was deleted.`);
+        setDeleting(null);
+      },
+    });
+  };
+
   return (
     <section className="space-y-4">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h2 className="text-lg font-black text-gray-900">Coupons</h2>
           <p className="text-xs text-gray-500">
-            Coupons are never deleted, only paused. Customers can use them once checkout is built.
+            A used coupon can only be paused; an unused one can be deleted. Customers can use
+            coupons once checkout is built.
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -176,6 +191,18 @@ export default function CouponsPage() {
                       >
                         {coupon.isActive ? 'Pause' : 'Resume'}
                       </button>
+                      <DeleteButton
+                        label={coupon.code}
+                        disabledReason={
+                          coupon.usedCount > 0
+                            ? 'Used coupons cannot be deleted. Pause it instead.'
+                            : ''
+                        }
+                        onClick={() => {
+                          remove.reset();
+                          setDeleting(coupon);
+                        }}
+                      />
                     </td>
                   </tr>
                 );
@@ -206,6 +233,17 @@ export default function CouponsPage() {
             </p>
           )}
         </ConfirmDialog>
+      )}
+
+      {deleting && (
+        <DeleteConfirm
+          name={deleting.code}
+          kind="coupon"
+          busy={remove.isPending}
+          error={remove.isError ? remove.error.message : ''}
+          onConfirm={confirmDelete}
+          onCancel={() => setDeleting(null)}
+        />
       )}
     </section>
   );

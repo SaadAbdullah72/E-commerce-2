@@ -1,6 +1,6 @@
 import { supabase } from '@/lib/supabase/client';
 
-import { friendlySaveError } from './saveErrors';
+import { friendlyDeleteError, friendlySaveError } from './saveErrors';
 
 /**
  * Create (id = null) or update a category. Categories are written directly; the table's
@@ -63,4 +63,11 @@ export async function getAdminCategory(id) {
         ? [{ url: data.icon_url, publicId: data.icon_public_id, alt: '' }]
         : [],
   };
+}
+
+/** Permanently delete. The database refuses when the category is still in use. */
+export async function deleteCategory(id) {
+  const { data, error } = await supabase.from('categories').delete().eq('id', id).select('id');
+  // Row-level security hides rows silently, so "nothing deleted" is a permission failure.
+  if (error || !data?.length) throw new Error(friendlyDeleteError(error, 'category'));
 }

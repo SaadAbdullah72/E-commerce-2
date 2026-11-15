@@ -54,9 +54,10 @@
 --      and "authenticated" has only SELECT on profiles. The Profile page is
 --      read-only today, which matches. An editable profile will need a policy
 --      and a grant in a new migration.
---   5. No table has a DELETE policy except product_images and
---      product_deal_tags. Products, categories, coupons and banners are
---      paused (is_active), never deleted.
+--   5. As first built, no table had a DELETE policy except product_images and
+--      product_deal_tags, and products, categories, coupons and banners were only
+--      paused (is_active). Migration 0006 later added admin DELETE for those
+--      four tables (with safety guards), and 0007 added the Cloudinary cleanup queue.
 --
 -- FROM NOW ON
 --   Every database change goes into a new numbered file in this folder FIRST,

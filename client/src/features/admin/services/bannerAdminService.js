@@ -1,7 +1,7 @@
 import { supabase } from '@/lib/supabase/client';
 
 import { toLocalInput } from '../lib/dates';
-import { friendlySaveError } from './saveErrors';
+import { friendlyDeleteError, friendlySaveError } from './saveErrors';
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const COLUMNS =
@@ -123,4 +123,11 @@ export async function swapBannerOrder(first, second) {
   if (results.some(({ error, data }) => error || !data?.length)) {
     throw new Error('We could not change the order. Reload and try again.');
   }
+}
+
+/** Permanently delete. The database refuses when the banner is still in use. */
+export async function deleteBanner(id) {
+  const { data, error } = await supabase.from('site_banners').delete().eq('id', id).select('id');
+  // Row-level security hides rows silently, so "nothing deleted" is a permission failure.
+  if (error || !data?.length) throw new Error(friendlyDeleteError(error, 'banner'));
 }

@@ -5,10 +5,12 @@ import ProductImage from '@/features/catalog/components/ProductImage';
 import { formatMoney } from '@/shared/lib/formatMoney';
 
 import ConfirmDialog from '../components/ConfirmDialog';
+import DeleteButton from '../components/DeleteButton';
+import DeleteConfirm from '../components/DeleteConfirm';
 import QueryState from '../components/QueryState';
 import StatusBadge from '../components/StatusBadge';
 import { useAdminProducts } from '../hooks/useAdminData';
-import { useSetProductActive } from '../hooks/useAdminMutations';
+import { useDeleteProduct, useSetProductActive } from '../hooks/useAdminMutations';
 import { stockStatus } from '../lib/adminStats';
 
 const STOCK_BADGE = {
@@ -20,10 +22,12 @@ const STOCK_BADGE = {
 export default function ProductsPage() {
   const query = useAdminProducts();
   const setActive = useSetProductActive();
+  const remove = useDeleteProduct();
   const location = useLocation();
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('all');
   const [pending, setPending] = useState(null); // the product being deactivated / restored
+  const [deleting, setDeleting] = useState(null); // the product being deleted
   const [notice, setNotice] = useState(location.state?.notice ?? '');
 
   const needle = search.trim().toLowerCase();
@@ -50,13 +54,24 @@ export default function ProductsPage() {
     );
   };
 
+  const confirmDelete = () => {
+    const target = deleting;
+    remove.mutate(target.id, {
+      onSuccess: () => {
+        setNotice(`"${target.title}" was deleted.`);
+        setDeleting(null);
+      },
+    });
+  };
+
   return (
     <section className="space-y-4">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h2 className="text-lg font-black text-gray-900">Products</h2>
           <p className="text-xs text-gray-500">
-            Deactivated products are hidden from the shop but never deleted.
+            Deactivated products are hidden from the shop. A product can only be deleted if it was
+            never ordered.
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -174,6 +189,13 @@ export default function ProductsPage() {
                       >
                         {product.isActive ? 'Deactivate' : 'Restore'}
                       </button>
+                      <DeleteButton
+                        label={product.title}
+                        onClick={() => {
+                          remove.reset();
+                          setDeleting(product);
+                        }}
+                      />
                     </td>
                   </tr>
                 );
@@ -204,6 +226,17 @@ export default function ProductsPage() {
             </p>
           )}
         </ConfirmDialog>
+      )}
+
+      {deleting && (
+        <DeleteConfirm
+          name={deleting.title}
+          kind="product"
+          busy={remove.isPending}
+          error={remove.isError ? remove.error.message : ''}
+          onConfirm={confirmDelete}
+          onCancel={() => setDeleting(null)}
+        />
       )}
     </section>
   );

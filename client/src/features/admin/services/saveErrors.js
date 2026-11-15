@@ -39,3 +39,30 @@ export function friendlySaveError(error, what) {
       return `We could not save the ${what}. Please try again.`;
   }
 }
+
+/**
+ * Friendly text for a failed delete. The database is the real guard (foreign keys and the
+ * coupon trigger); this only explains its refusal.
+ *
+ * @param {{ code?: string, message?: string, details?: string } | null | undefined} error
+ * @param {'product' | 'category' | 'coupon' | 'banner'} what
+ */
+export function friendlyDeleteError(error, what) {
+  const text = `${error?.message ?? ''} ${error?.details ?? ''}`;
+
+  if (error?.code === '23503') {
+    if (what === 'product') {
+      return 'Cannot delete this product because it has associated orders. Please deactivate it instead.';
+    }
+    if (what === 'category') {
+      return 'Cannot delete this category because it still has products, including inactive ones. Move or delete them first.';
+    }
+  }
+  if (error?.code === '23514' && what === 'coupon' && /cannot be deleted/i.test(text)) {
+    return 'Cannot delete a used coupon. Pause it instead.';
+  }
+  if (error?.code === '42501' || !error) {
+    return `You do not have permission to delete this ${what}.`;
+  }
+  return `We could not delete the ${what}. Please try again.`;
+}

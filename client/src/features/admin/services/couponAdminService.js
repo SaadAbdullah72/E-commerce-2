@@ -2,7 +2,7 @@ import { supabase } from '@/lib/supabase/client';
 
 import { toLocalInput } from '../lib/dates';
 import { minorToInput } from '../lib/money';
-import { friendlySaveError } from './saveErrors';
+import { friendlyDeleteError, friendlySaveError } from './saveErrors';
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const COLUMNS =
@@ -91,4 +91,11 @@ export async function setCouponActive(id, isActive) {
       isActive ? 'We could not resume the coupon.' : 'We could not pause the coupon.',
     );
   }
+}
+
+/** Permanently delete. The database refuses when the coupon is still in use. */
+export async function deleteCoupon(id) {
+  const { data, error } = await supabase.from('coupons').delete().eq('id', id).select('id');
+  // Row-level security hides rows silently, so "nothing deleted" is a permission failure.
+  if (error || !data?.length) throw new Error(friendlyDeleteError(error, 'coupon'));
 }

@@ -181,8 +181,9 @@ create trigger products_validate_colors
 
 -- -----------------------------------------------------------------------------
 -- Row level security
--- Public sees only active rows. Admins see and change everything, but nothing is
--- ever deleted: products, categories and deal tags have no DELETE policy.
+-- Public sees only active rows. Admins see and change everything. As first built,
+-- products, categories and deal tags had no DELETE policy; migration 0006 later
+-- added admin delete for products and categories (deal tags still have none).
 -- (Images and tag links can be deleted: the save function replaces them as a set.)
 -- -----------------------------------------------------------------------------
 alter table public.categories        enable row level security;

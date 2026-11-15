@@ -1,23 +1,32 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
-import { saveBanner, setBannerActive, swapBannerOrder } from '../services/bannerAdminService';
-import { saveCategory, setCategoryActive } from '../services/categoryAdminService';
-import { saveCoupon, setCouponActive } from '../services/couponAdminService';
-import { saveProduct, setProductActive } from '../services/productAdminService';
+import {
+  deleteBanner,
+  saveBanner,
+  setBannerActive,
+  swapBannerOrder,
+} from '../services/bannerAdminService';
+import { deleteCategory, saveCategory, setCategoryActive } from '../services/categoryAdminService';
+import { deleteCoupon, saveCoupon, setCouponActive } from '../services/couponAdminService';
+import { deleteProduct, saveProduct, setProductActive } from '../services/productAdminService';
+import { requestAssetCleanup } from '../services/uploadService';
 
 /** After any change, the admin lists and the public shop must not show stale data. */
-function useRefreshAfterChange() {
+function useRefreshAfterChange({ cleanup = false } = {}) {
   const queryClient = useQueryClient();
-  return () =>
-    Promise.all([
+  return () => {
+    // Pictures that were replaced or removed are deleted from Cloudinary in the background.
+    if (cleanup) void requestAssetCleanup();
+    return Promise.all([
       queryClient.invalidateQueries({ queryKey: ['admin'] }),
       queryClient.invalidateQueries({ queryKey: ['catalog'] }),
       queryClient.invalidateQueries({ queryKey: ['banners'] }),
     ]);
+  };
 }
 
 export function useSaveProduct() {
-  const refresh = useRefreshAfterChange();
+  const refresh = useRefreshAfterChange({ cleanup: true });
   return useMutation({
     mutationFn: ({ id, payload }) => saveProduct(id, payload),
     onSuccess: refresh,
@@ -33,7 +42,7 @@ export function useSetProductActive() {
 }
 
 export function useSaveCategory() {
-  const refresh = useRefreshAfterChange();
+  const refresh = useRefreshAfterChange({ cleanup: true });
   return useMutation({
     mutationFn: ({ id, row }) => saveCategory(id, row),
     onSuccess: refresh,
@@ -62,7 +71,7 @@ export function useSetCouponActive() {
 }
 
 export function useSaveBanner() {
-  const refresh = useRefreshAfterChange();
+  const refresh = useRefreshAfterChange({ cleanup: true });
   return useMutation({ mutationFn: ({ id, row }) => saveBanner(id, row), onSuccess: refresh });
 }
 
@@ -80,4 +89,24 @@ export function useSwapBannerOrder() {
     mutationFn: ({ first, second }) => swapBannerOrder(first, second),
     onSuccess: refresh,
   });
+}
+
+export function useDeleteProduct() {
+  const refresh = useRefreshAfterChange({ cleanup: true });
+  return useMutation({ mutationFn: (id) => deleteProduct(id), onSuccess: refresh });
+}
+
+export function useDeleteCategory() {
+  const refresh = useRefreshAfterChange({ cleanup: true });
+  return useMutation({ mutationFn: (id) => deleteCategory(id), onSuccess: refresh });
+}
+
+export function useDeleteCoupon() {
+  const refresh = useRefreshAfterChange();
+  return useMutation({ mutationFn: (id) => deleteCoupon(id), onSuccess: refresh });
+}
+
+export function useDeleteBanner() {
+  const refresh = useRefreshAfterChange({ cleanup: true });
+  return useMutation({ mutationFn: (id) => deleteBanner(id), onSuccess: refresh });
 }

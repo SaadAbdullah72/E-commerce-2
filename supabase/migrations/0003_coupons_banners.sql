@@ -177,7 +177,8 @@ create trigger site_banners_updated_at
 alter table public.coupons      enable row level security;
 alter table public.site_banners enable row level security;
 
--- coupons: admins only, and no DELETE policy (coupons are paused, never deleted)
+-- coupons: admins only. As first built there was no DELETE policy (coupons were only
+-- paused); migration 0006 later added admin delete, blocked once a coupon is used.
 create policy "coupons: admin read all" on public.coupons
   for select to authenticated using (((select public.is_admin())));
 create policy "coupons: admin insert" on public.coupons
@@ -201,7 +202,8 @@ create policy "site_banners: admin update" on public.site_banners
   using (((select public.is_admin()))) with check (((select public.is_admin())));
 
 -- -----------------------------------------------------------------------------
--- Grants (as in production). Banners and coupons are never deleted: no DELETE grant.
+-- Grants (as in production). At this point banners and coupons have no DELETE grant;
+-- migration 0006 adds it.
 -- -----------------------------------------------------------------------------
 revoke all on table public.coupons, public.site_banners from anon, authenticated;
 

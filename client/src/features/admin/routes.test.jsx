@@ -196,7 +196,7 @@ describe('products', () => {
     expect(screen.getByRole('button', { name: /try again/i })).toBeInTheDocument();
   });
 
-  it('offers add, edit and deactivate, but never a hard delete', async () => {
+  it('offers add, edit, deactivate and a delete that asks first', async () => {
     service.listAdminProducts.mockResolvedValue([product()]);
     renderAdmin('/admin/products');
     await screen.findByText('Wireless Earbuds');
@@ -210,7 +210,8 @@ describe('products', () => {
       '/admin/products/p1',
     );
     expect(screen.getByRole('button', { name: 'Deactivate Wireless Earbuds' })).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /^delete/i })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Delete Wireless Earbuds' })).toBeInTheDocument();
+    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
   });
 });
 
