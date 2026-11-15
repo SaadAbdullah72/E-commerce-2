@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { MapPin, ArrowRight, Truck } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../features/auth/hooks/useAuth';
+import { loadShipping, saveShipping } from '../features/checkout/lib/shippingStorage';
 import { STANDARD_DELIVERY_FEE_MINOR } from '../shared/constants/market';
 import { formatMoney } from '../shared/lib/formatMoney';
 
@@ -43,7 +44,7 @@ export default function ShippingPage({ onProceedToPayment }) {
   const { subtotalMinor } = useCart();
   const { user, account } = useAuth();
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState(() => ({
     // Name and email come from the signed-in account; phone and address are typed by the customer.
     fullName: account?.fullName ?? '',
     email: user?.email ?? '',
@@ -53,7 +54,9 @@ export default function ShippingPage({ onProceedToPayment }) {
     city: '',
     courier: '',
     notes: '',
-  });
+    // Coming back with "Edit" from checkout: keep what was already typed in this tab.
+    ...(loadShipping(user?.id) ?? {}),
+  }));
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -76,8 +79,8 @@ export default function ShippingPage({ onProceedToPayment }) {
       formData.state === 'Bauchi State (Primary Local Hub)' ? 0 : STANDARD_DELIVERY_FEE_MINOR;
     const finalPayload = { ...formData, deliveryFeeMinor: finalDeliveryFeeMinor };
 
-    // Save directly to localStorage as an instant fallback
-    localStorage.setItem('shopyaro_shipping', JSON.stringify(finalPayload));
+    // Kept for this tab only (sessionStorage); checkout reads it from there.
+    saveShipping(finalPayload, user?.id);
 
     if (onProceedToPayment) {
       onProceedToPayment(finalPayload);
@@ -260,7 +263,7 @@ export default function ShippingPage({ onProceedToPayment }) {
                 <span className="font-bold text-gray-900">{formatMoney(subtotalMinor)}</span>
               </div>
               <div className="flex justify-between text-gray-500">
-                <span>Delivery Fee</span>
+                <span>Estimated delivery</span>
                 <span className={`font-bold ${isBauchiState ? 'text-emerald-600' : 'text-gray-900'}`}>
                   {isBauchiState ? `${formatMoney(0)} (FREE)` : formatMoney(STANDARD_DELIVERY_FEE_MINOR)}
                 </span>

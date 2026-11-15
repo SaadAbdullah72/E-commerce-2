@@ -106,6 +106,18 @@ export function CartProvider({ children }) {
     setItems((previous) => previous.filter((item) => !bought.has(lineKey(item.productId, item.size, item.color))));
   };
 
+  /**
+   * Remove exactly the lines of a paid order (matched by product, size and colour), however the
+   * cart's ticks have changed since. Used by the order success page.
+   * @param {{ productId: string, size: string | null, color: string | null }[]} purchased
+   */
+  const removePurchasedLines = (purchased) => {
+    const bought = new Set(purchased.map((line) => lineKey(line.productId, line.size, line.color)));
+    setItems((previous) =>
+      previous.filter((item) => !bought.has(lineKey(item.productId, item.size, item.color))),
+    );
+  };
+
   const selectedCart = purchasableSelected(lines);
 
   const value = {
@@ -124,6 +136,7 @@ export function CartProvider({ children }) {
     acknowledgePriceChange,
     clearCart,
     removeSelectedItems,
+    removePurchasedLines,
     totalItems: items.reduce((sum, item) => sum + item.quantity, 0),
     selectedItemsCount: countUnits(selectedCart),
     /** Whole cents, from live database prices. */

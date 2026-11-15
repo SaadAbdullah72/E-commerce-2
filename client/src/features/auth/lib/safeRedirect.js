@@ -6,7 +6,16 @@
  * full URLs, protocol-relative URLs or relative traversal.
  */
 
-export const REDIRECT_ALLOW_LIST = ['/', '/profile', '/orders', '/shipping', '/checkout', '/admin'];
+export const REDIRECT_ALLOW_LIST = [
+  '/',
+  '/profile',
+  '/orders',
+  '/shipping',
+  '/checkout',
+  '/order/success',
+  '/order/cancelled',
+  '/admin',
+];
 
 /**
  * @param {unknown} value Raw value from a query string such as ?redirect=shipping

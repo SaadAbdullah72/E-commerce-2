@@ -7,6 +7,8 @@ import ProductDetailPage from './pages/ProductDetailPage';
 import CartDrawer from './components/cart/CartDrawer';
 import ShippingPage from './pages/ShippingPage';
 import CheckoutPage from './pages/CheckoutPage';
+import OrderCancelledPage from './features/checkout/pages/OrderCancelledPage';
+import OrderSuccessPage from './features/checkout/pages/OrderSuccessPage';
 import AdminRoute from './features/auth/components/AdminRoute';
 import ProtectedRoute from './features/auth/components/ProtectedRoute';
 import { useAuth } from './features/auth/hooks/useAuth';
@@ -148,6 +150,23 @@ export default function App() {
           element={
             <ProtectedRoute>
               <CheckoutPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/order/success"
+          element={
+            <ProtectedRoute>
+              <OrderSuccessPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/order/cancelled"
+          element={
+            <ProtectedRoute>
+              <OrderCancelledPage />
             </ProtectedRoute>
           }
         />
