@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 
 import {
   getCount,
@@ -6,6 +6,8 @@ import {
   listAdminProducts,
   listLowStockProducts,
 } from '../services/adminService';
+import { getCatalogStats } from '../services/analyticsService';
+import { listAuditLog } from '../services/auditLogService';
 import { getAdminBanner, listAdminBanners } from '../services/bannerAdminService';
 import { getAdminCategory } from '../services/categoryAdminService';
 import { getAdminCoupon, listAdminCoupons } from '../services/couponAdminService';
@@ -86,3 +88,16 @@ export const useAdminBanner = (id) =>
     staleTime: 0,
     gcTime: 0,
   });
+
+/** @param {{ table: string, action: string, search: string }} filters */
+export const useAuditLog = (filters) =>
+  useInfiniteQuery({
+    queryKey: ['admin', 'audit-log', filters],
+    queryFn: ({ pageParam }) => listAuditLog({ ...filters, before: pageParam }),
+    initialPageParam: null,
+    getNextPageParam: (lastPage) => lastPage.nextBefore,
+    staleTime: 0,
+  });
+
+export const useCatalogStats = () =>
+  useQuery({ queryKey: ['admin', 'catalog-stats'], queryFn: getCatalogStats, staleTime: STALE_MS });

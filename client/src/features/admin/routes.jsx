@@ -1,12 +1,14 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
 
 import AdminLayout from './components/AdminLayout';
+import AnalyticsPage from './pages/AnalyticsPage';
 import BannerEditPage from './pages/BannerEditPage';
 import BannersPage from './pages/BannersPage';
 import CategoriesPage from './pages/CategoriesPage';
 import ComingSoonPage from './pages/ComingSoonPage';
 import CouponEditPage from './pages/CouponEditPage';
 import CouponsPage from './pages/CouponsPage';
+import LogsPage from './pages/LogsPage';
 import OverviewPage from './pages/OverviewPage';
 import ProductEditPage from './pages/ProductEditPage';
 import ProductsPage from './pages/ProductsPage';
@@ -28,7 +30,8 @@ export default function AdminRoutes() {
         <Route path="banners" element={<BannersPage />} />
         <Route path="banners/new" element={<BannerEditPage />} />
         <Route path="banners/:id" element={<BannerEditPage />} />
-        <Route path="logs" element={<ComingSoonPage />} />
+        <Route path="analytics" element={<AnalyticsPage />} />
+        <Route path="logs" element={<LogsPage />} />
         <Route path="*" element={<Navigate to="/admin" replace />} />
       </Route>
     </Routes>

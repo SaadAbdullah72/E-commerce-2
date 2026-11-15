@@ -87,7 +87,15 @@ describe('admin layout', () => {
       'href',
       '/admin/banners',
     );
-    expect(within(nav).getByText('Phase 5')).toBeInTheDocument();
+    expect(within(nav).getByRole('link', { name: 'Analytics' })).toHaveAttribute(
+      'href',
+      '/admin/analytics',
+    );
+    expect(within(nav).getByRole('link', { name: 'Activity log' })).toHaveAttribute(
+      'href',
+      '/admin/logs',
+    );
+    expect(within(nav).queryByText('Phase 5')).not.toBeInTheDocument();
     expect(screen.getAllByText('admin@example.com').length).toBeGreaterThan(0);
   });
 
@@ -230,5 +238,19 @@ describe('placeholders and unknown paths', () => {
   it('sends unknown admin paths back to the overview', async () => {
     renderAdmin('/admin/nope');
     expect(await screen.findByRole('heading', { name: 'Overview' })).toBeInTheDocument();
+  });
+
+  it('has a Back to Store link in both the header and the sidebar', async () => {
+    service.getCount.mockResolvedValue(0);
+    service.listLowStockProducts.mockResolvedValue([]);
+    renderAdmin('/admin');
+
+    const header = await screen.findByRole('banner');
+    expect(within(header).getByRole('link', { name: /back to store/i })).toHaveAttribute(
+      'href',
+      '/',
+    );
+    const nav = screen.getByRole('navigation', { name: 'Admin' });
+    expect(within(nav).getByRole('link', { name: /back to store/i })).toHaveAttribute('href', '/');
   });
 });
