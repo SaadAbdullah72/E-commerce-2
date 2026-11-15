@@ -1,0 +1,65 @@
+-- =============================================================================
+-- 0000_baseline.sql   (notes only: contains no executable statements)
+-- =============================================================================
+--
+-- WHAT THIS FOLDER IS
+--   Migrations 0001 to 0005 rebuild the ShopYaro database schema from nothing.
+--
+-- HOW THEY WERE MADE (read this before trusting them)
+--   These files were RECONSTRUCTED from the production Supabase database on
+--   2026-11-15, not written before it. The production schema was originally
+--   built by hand in the Supabase SQL Editor, so no earlier migration history
+--   exists. The files were generated from three read-only introspection queries
+--   (structure, security, code) run against production:
+--     * tables, columns, defaults, constraints (with their real names), indexes
+--     * row level security flags, every policy expression, table/function grants
+--     * the full text of every function in the public schema, and every trigger
+--       on the public tables and on auth.users
+--   Statements are written to match that output. Constraint, index, policy and
+--   trigger NAMES are kept identical to production on purpose (the app maps some
+--   constraint names to error messages, e.g. coupons_code_key).
+--
+-- HOW TO APPLY
+--   Order matters: 0001, 0002, 0003, 0004, 0005.
+--   They are meant for an EMPTY project (a fresh Supabase project, or a local
+--   copy). They are NOT meant to be re-run on production: the tables already
+--   exist there. Nothing here has been executed against production by this
+--   change.
+--
+-- WHAT THE MIGRATIONS DO NOT CONTAIN
+--   * Data: products, product images, coupons, banners, profiles and roles are
+--     live data and are not in any migration. Only starter reference data
+--     (6 categories, 6 deal tags) is included, at the end of 0002.
+--   * The first admin: grant the admin role by hand after signing up, e.g.
+--       update public.user_roles set role = 'admin' where user_id = '<uuid>';
+--   * Supabase platform items: the event trigger and function rls_auto_enable()
+--     (managed by Supabase, deliberately left out), the extensions
+--     supabase_vault, pg_stat_statements and plpgsql, auth settings (email
+--     templates, Google OAuth, redirect URLs), and Edge Function code/secrets
+--     (the sign-upload function lives in supabase/functions/).
+--
+-- THINGS FOUND IN PRODUCTION THAT ARE REPRODUCED AS-IS (candidates for a
+-- later, separate clean-up: none were changed here)
+--   1. Duplicate index: product_images_product_idx and
+--      product_images_product_position_idx are identical.
+--   2. Redundant policies: admin_select_all_categories, admin_select_all_products
+--      and admin_select_all_profiles do the same job as the other admin read
+--      policies.
+--   3. Trigger functions (audit_log_immutable, catalog_set_updated_at,
+--      coupons_guard, set_updated_at, site_banners_limit,
+--      validate_product_colors) keep the default EXECUTE for PUBLIC. They return
+--      "trigger", so they cannot be called directly, but revoking the grant would
+--      be tidier.
+--   4. Customers cannot edit their own profile: profiles has NO update policy
+--      and "authenticated" has only SELECT on profiles. The Profile page is
+--      read-only today, which matches. An editable profile will need a policy
+--      and a grant in a new migration.
+--   5. No table has a DELETE policy except product_images and
+--      product_deal_tags. Products, categories, coupons and banners are
+--      paused (is_active), never deleted.
+--
+-- FROM NOW ON
+--   Every database change goes into a new numbered file in this folder FIRST,
+--   is reviewed, and then run in the SQL Editor. Never change production by hand
+--   without a matching migration.
+-- =============================================================================
