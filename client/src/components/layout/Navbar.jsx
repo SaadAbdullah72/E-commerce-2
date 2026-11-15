@@ -108,7 +108,7 @@ export default function Navbar({ onSearch, onSelectCategory }) {
           <div className="relative flex items-center">
             <input
               type="text"
-              placeholder="Search 10,000+ factory-direct deals on ShopYaro..."
+              placeholder="Search products on ShopYaro..."
               value={searchTerm}
               onChange={handleSearchChange}
               className="w-full pl-5 pr-20 py-2.5 bg-blue-50/50 hover:bg-blue-50 focus:bg-white text-sm font-medium border-2 border-blue-500 rounded-full outline-none transition-all duration-200 focus:ring-4 focus:ring-blue-500/20 text-gray-800"

@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MapPin, ArrowRight, Truck } from 'lucide-react';
 import { useCart } from '../context/CartContext';
+import { useAuth } from '../features/auth/hooks/useAuth';
 import { STANDARD_DELIVERY_FEE_MINOR } from '../shared/constants/market';
 import { formatMoney } from '../shared/lib/formatMoney';
 
@@ -40,12 +41,14 @@ const BAUCHI_EXCLUSIVE_COURIER = 'ShopYaro Express Delivery (Bauchi Local Only) 
 export default function ShippingPage({ onProceedToPayment }) {
   const navigate = useNavigate();
   const { subtotalMinor } = useCart();
+  const { user, account } = useAuth();
 
   const [formData, setFormData] = useState({
-    fullName: 'Huzaifa Javid',
-    email: 'huzaifa@gmail.com',
-    phone: '+234 800 1234567',
-    address: 'F Block B-17',
+    // Name and email come from the signed-in account; phone and address are typed by the customer.
+    fullName: account?.fullName ?? '',
+    email: user?.email ?? '',
+    phone: '',
+    address: '',
     state: '',
     city: '',
     courier: '',
@@ -204,10 +207,10 @@ export default function ShippingPage({ onProceedToPayment }) {
               </div>
 
               {isBauchiState && (
-                <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center gap-2.5 text-xs text-emerald-800[cite: 12]">
+                <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center gap-2.5 text-xs text-emerald-800">
                   <Truck size={16} className="text-emerald-600 shrink-0" />
                   <span>
-                    <strong>Bauchi Metropolis Resident:</strong> Enjoy <strong>100% FREE Delivery ({formatMoney(0)})</strong> across all categories[cite: 12].
+                    <strong>Bauchi Metropolis Resident:</strong> Enjoy <strong>100% FREE Delivery ({formatMoney(0)})</strong> across all categories.
                   </span>
                 </div>
               )}

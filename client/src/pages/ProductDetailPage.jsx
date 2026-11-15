@@ -311,7 +311,7 @@ function ProductDetailView({ product, isLoggedIn }) {
           </div>
         </div>
 
-<ProductReviewsSection productId={product._id} isLoggedIn={isLoggedIn} />
+<ProductReviewsSection />
 
       </div>
     </div>

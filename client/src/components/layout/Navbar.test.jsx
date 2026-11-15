@@ -54,3 +54,12 @@ describe('Navbar admin link', () => {
     expect(screen.getByTestId('where')).toHaveTextContent('/admin');
   });
 });
+
+describe('Navbar search box', () => {
+  it('makes no made-up claim about how many deals there are', () => {
+    renderNavbar();
+    const box = screen.getByRole('textbox');
+    expect(box).toHaveAttribute('placeholder', 'Search products on ShopYaro...');
+    expect(box.getAttribute('placeholder')).not.toMatch(/\d{2},\d{3}|factory/i);
+  });
+});

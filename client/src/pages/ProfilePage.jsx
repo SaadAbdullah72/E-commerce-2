@@ -1,4 +1,4 @@
-import React from 'react';
+
 import { useNavigate, Link } from 'react-router-dom';
 import { User, Mail, Phone, MapPin, Package, LogOut, ShieldCheck } from 'lucide-react';
 import { useAuth } from '../features/auth/hooks/useAuth';
@@ -71,7 +71,6 @@ export default function ProfilePage({ onLogout }) {
                   <Package size={16} className="text-blue-600" />
                   <span>My Orders & Tracking</span>
                 </div>
-                <span className="bg-orange-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full">2 Active</span>
               </Link>
 
               <div className="flex items-center justify-between p-3 rounded-xl bg-blue-50 text-blue-700 text-xs font-bold">
