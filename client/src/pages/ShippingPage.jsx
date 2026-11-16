@@ -3,28 +3,16 @@ import { useNavigate } from 'react-router-dom';
 import { MapPin, ArrowRight, Truck } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../features/auth/hooks/useAuth';
+import { shippingDefaultsFromAccount } from '../features/checkout/lib/defaultShipping';
 import { loadShipping, saveShipping } from '../features/checkout/lib/shippingStorage';
+import {
+  BAUCHI_EXCLUSIVE_COURIER,
+  BAUCHI_STATE,
+  citiesForState,
+  STATES,
+} from '../shared/constants/locations';
 import { STANDARD_DELIVERY_FEE_MINOR } from '../shared/constants/market';
 import { formatMoney } from '../shared/lib/formatMoney';
-
-const NIGERIAN_STATES = [
-  'Abia State', 'Adamawa State', 'Akwa Ibom State', 'Anambra State',
-  'Bauchi State (Primary Local Hub)', 'Bayelsa State', 'Benue State', 'Borno State',
-  'Cross River State', 'Delta State', 'Ebonyi State', 'Edo State', 'Ekiti State',
-  'Enugu State', 'Federal Capital Territory (FCT / Abuja)', 'Gombe State',
-  'Imo State', 'Jigawa State', 'Kaduna State', 'Kano State', 'Katsina State',
-  'Kebbi State', 'Kogi State', 'Kwara State', 'Lagos State', 'Nasarawa State',
-  'Niger State', 'Ogun State', 'Ondo State', 'Osun State', 'Oyo State',
-  'Plateau State', 'Rivers State', 'Sokoto State', 'Taraba State', 'Yobe State', 'Zamfara State',
-];
-
-const BAUCHI_CITIES = [
-  'Bauchi (Metropolis)', 'Azare', 'Misau', "Jama'are", 'Katagum', 'Ningi',
-  'Dass', 'Toro', 'Alkaleri', 'Bogoro', 'Tafawa Balewa', 'Darazo', 'Gamawa',
-  'Giade', 'Itas/Gadau', 'Shira', 'Warji', 'Zaki', 'Kirfi', 'Damban',
-];
-
-const STANDARD_CITIES = ['City Central / Metropolis', 'Capital District', 'Commercial Area', 'Outer Region'];
 
 const STANDARD_COURIERS = [
   'Shipbubble (1-3 Business Days (Nationwide))',
@@ -37,22 +25,17 @@ const STANDARD_COURIERS = [
   'T-Ship Standard Freight (Terminal Africa) (2-4 Days Nationwide Freight)',
 ];
 
-const BAUCHI_EXCLUSIVE_COURIER = 'ShopYaro Express Delivery (Bauchi Local Only) (Same Day / 24 Hours (Bauchi State Only))';
-
 export default function ShippingPage({ onProceedToPayment }) {
   const navigate = useNavigate();
   const { subtotalMinor } = useCart();
   const { user, account } = useAuth();
 
   const [formData, setFormData] = useState(() => ({
-    // Name and email come from the signed-in account; phone and address are typed by the customer.
+    // Name and email come from the signed-in account; phone and the default address come from the
+    // saved profile (empty when none was saved).
     fullName: account?.fullName ?? '',
     email: user?.email ?? '',
-    phone: '',
-    address: '',
-    state: '',
-    city: '',
-    courier: '',
+    ...shippingDefaultsFromAccount(account),
     notes: '',
     // Coming back with "Edit" from checkout: keep what was already typed in this tab.
     ...(loadShipping(user?.id) ?? {}),
@@ -61,7 +44,7 @@ export default function ShippingPage({ onProceedToPayment }) {
   const handleChange = (e) => {
     const { name, value } = e.target;
     if (name === 'state') {
-      const isNowBauchi = value === 'Bauchi State (Primary Local Hub)';
+      const isNowBauchi = value === BAUCHI_STATE;
       setFormData({ 
         ...formData, 
         state: value, 
@@ -76,7 +59,7 @@ export default function ShippingPage({ onProceedToPayment }) {
   const handleSubmit = (e) => {
     e.preventDefault();
     const finalDeliveryFeeMinor =
-      formData.state === 'Bauchi State (Primary Local Hub)' ? 0 : STANDARD_DELIVERY_FEE_MINOR;
+      formData.state === BAUCHI_STATE ? 0 : STANDARD_DELIVERY_FEE_MINOR;
     const finalPayload = { ...formData, deliveryFeeMinor: finalDeliveryFeeMinor };
 
     // Kept for this tab only (sessionStorage); checkout reads it from there.
@@ -90,8 +73,8 @@ export default function ShippingPage({ onProceedToPayment }) {
     }
   };
 
-  const isBauchiState = formData.state === 'Bauchi State (Primary Local Hub)';
-  const availableCities = formData.state ? (isBauchiState ? BAUCHI_CITIES : STANDARD_CITIES) : [];
+  const isBauchiState = formData.state === BAUCHI_STATE;
+  const availableCities = citiesForState(formData.state);
   const availableCouriers = isBauchiState ? [BAUCHI_EXCLUSIVE_COURIER, ...STANDARD_COURIERS] : STANDARD_COURIERS;
 
   const deliveryFeeMinor = isBauchiState ? 0 : STANDARD_DELIVERY_FEE_MINOR;
@@ -183,7 +166,7 @@ export default function ShippingPage({ onProceedToPayment }) {
                     className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs text-gray-900 focus:outline-none focus:border-blue-600 cursor-pointer"
                   >
                     <option value="">Select State</option>
-                    {NIGERIAN_STATES.map((st, idx) => (
+                    {STATES.map((st, idx) => (
                       <option key={idx} value={st}>{st}</option>
                     ))}
                   </select>

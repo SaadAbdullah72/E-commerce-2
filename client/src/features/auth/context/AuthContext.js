@@ -9,6 +9,7 @@ import { createContext } from 'react';
  *   role: 'customer' | 'admin' | null,
  *   isAdmin: boolean,
  *   signOut: () => Promise<void>,
+ *   refreshAccount: () => Promise<boolean>,
  * }} AuthValue
  */
 

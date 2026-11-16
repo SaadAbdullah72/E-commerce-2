@@ -1,4 +1,5 @@
 import { act, render, screen, waitFor } from '@testing-library/react';
+import { useState } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
@@ -24,11 +25,15 @@ import AuthProvider from './AuthProvider';
 let emit;
 
 function Probe() {
-  const { status, role, isAdmin, user, signOut } = useAuth();
+  const [result, setResult] = useState('');
+  const { status, role, isAdmin, user, account, signOut, refreshAccount } = useAuth();
   return (
     <div>
       <p data-testid="state">{`${status}|${role}|${isAdmin}|${user?.id ?? 'none'}`}</p>
+      <p data-testid="name">{account?.fullName ?? 'none'}</p>
       <button onClick={signOut}>out</button>
+      <button onClick={async () => setResult(String(await refreshAccount()))}>refresh</button>
+      <p data-testid="result">{result}</p>
     </div>
   );
 }
@@ -121,6 +126,72 @@ describe('AuthProvider', () => {
 
     expect(mocks.signOutLocal).toHaveBeenCalled();
     expect(state()).toBe('anonymous|null|false|none');
+  });
+
+  describe('refreshAccount', () => {
+    const signedIn = () =>
+      mocks.getSession.mockResolvedValue({ data: { session: { user: { id: 'u1' } } } });
+    const name = () => screen.getByTestId('name').textContent;
+
+    it('re-reads the profile so every page shows the new name', async () => {
+      signedIn();
+      mocks.fetchAccount.mockResolvedValueOnce({ userId: 'u1', role: 'customer', fullName: 'Old' });
+      renderProvider();
+      await waitFor(() => expect(name()).toBe('Old'));
+
+      mocks.fetchAccount.mockResolvedValueOnce({ userId: 'u1', role: 'customer', fullName: 'New' });
+      await act(async () => screen.getByText('refresh').click());
+
+      expect(name()).toBe('New');
+      expect(screen.getByTestId('result')).toHaveTextContent('true');
+      expect(state()).toBe('authenticated|customer|false|u1'); // never flickers back to loading
+    });
+
+    it('keeps what is shown when the re-read fails', async () => {
+      signedIn();
+      mocks.fetchAccount.mockResolvedValueOnce({ userId: 'u1', role: 'customer', fullName: 'Old' });
+      renderProvider();
+      await waitFor(() => expect(name()).toBe('Old'));
+
+      mocks.fetchAccount.mockResolvedValueOnce({
+        userId: 'u1',
+        role: 'customer',
+        fullName: null,
+        loadFailed: true,
+      });
+      await act(async () => screen.getByText('refresh').click());
+
+      expect(name()).toBe('Old');
+      expect(screen.getByTestId('result')).toHaveTextContent('false');
+    });
+
+    it('ignores an answer that arrives after sign-out', async () => {
+      signedIn();
+      mocks.fetchAccount.mockResolvedValueOnce({ userId: 'u1', role: 'customer', fullName: 'Old' });
+      renderProvider();
+      await waitFor(() => expect(name()).toBe('Old'));
+
+      let late;
+      mocks.fetchAccount.mockReturnValueOnce(new Promise((resolve) => (late = resolve)));
+      await act(async () => screen.getByText('refresh').click());
+      await act(async () => screen.getByText('out').click());
+      await act(async () => late({ userId: 'u1', role: 'customer', fullName: 'Late' }));
+
+      expect(state()).toBe('anonymous|null|false|none');
+      expect(name()).toBe('none');
+      expect(screen.getByTestId('result')).toHaveTextContent('false');
+    });
+
+    it('does nothing when nobody is signed in', async () => {
+      mocks.getSession.mockResolvedValue({ data: { session: null } });
+      renderProvider();
+      await waitFor(() => expect(state()).toContain('anonymous'));
+
+      await act(async () => screen.getByText('refresh').click());
+
+      expect(mocks.fetchAccount).not.toHaveBeenCalled();
+      expect(screen.getByTestId('result')).toHaveTextContent('false');
+    });
   });
 
   it('unsubscribes on unmount', async () => {

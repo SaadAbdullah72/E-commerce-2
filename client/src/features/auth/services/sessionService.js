@@ -3,7 +3,10 @@ import { supabase } from '@/lib/supabase/client';
 /**
  * @typedef {'customer' | 'admin'} AppRole
  * @typedef {{ userId: string, role: AppRole, fullName: string | null, phone: string | null,
- *   loadFailed: boolean }} Account
+ *   defaultAddress: string | null, defaultCity: string | null, defaultState: string | null,
+ *   profileMissing: boolean, loadFailed: boolean }} Account
+ * profileMissing: the account has no profiles row at all (an old account); there is nothing to edit.
+ * loadFailed: the profile could not be read, so the other fields are unknown.
  */
 
 /**
@@ -19,7 +22,11 @@ import { supabase } from '@/lib/supabase/client';
 export async function fetchAccount(userId) {
   try {
     const [profile, role] = await Promise.all([
-      supabase.from('profiles').select('full_name, phone').eq('id', userId).maybeSingle(),
+      supabase
+        .from('profiles')
+        .select('full_name, phone, default_address, default_city, default_state')
+        .eq('id', userId)
+        .maybeSingle(),
       supabase.from('user_roles').select('role').eq('user_id', userId).maybeSingle(),
     ]);
 
@@ -30,10 +37,24 @@ export async function fetchAccount(userId) {
       role: role.data?.role === 'admin' ? 'admin' : 'customer',
       fullName: profile.data?.full_name ?? null,
       phone: profile.data?.phone ?? null,
+      defaultAddress: profile.data?.default_address ?? null,
+      defaultCity: profile.data?.default_city ?? null,
+      defaultState: profile.data?.default_state ?? null,
+      profileMissing: profile.data === null,
       loadFailed: false,
     };
   } catch {
-    return { userId, role: 'customer', fullName: null, phone: null, loadFailed: true };
+    return {
+      userId,
+      role: 'customer',
+      fullName: null,
+      phone: null,
+      defaultAddress: null,
+      defaultCity: null,
+      defaultState: null,
+      profileMissing: false,
+      loadFailed: true,
+    };
   }
 }
 

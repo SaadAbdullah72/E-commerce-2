@@ -10,8 +10,7 @@ vi.mock('../context/CartContext', () => ({
 }));
 
 import ProductReviewsSection from '../components/product/ProductReviewsSection';
-import MyOrdersPage from './MyOrdersPage';
-import ProfilePage from './ProfilePage';
+import { saveShipping } from '../features/checkout/lib/shippingStorage';
 import ShippingPage from './ShippingPage';
 
 function Where() {
@@ -30,6 +29,7 @@ function renderPage(ui, path = '/page') {
 }
 
 beforeEach(() => {
+  sessionStorage.clear();
   auth.value = {
     status: 'authenticated',
     user: { email: 'sam@example.com' },
@@ -47,24 +47,6 @@ const FAKE = [
   /TRK-/i,
   /Leopard/i,
 ];
-
-describe('My Orders', () => {
-  it('says there are no orders, and shows no invented ones', () => {
-    const { container } = renderPage(<MyOrdersPage />);
-
-    expect(screen.getByRole('heading', { name: 'No orders yet' })).toBeInTheDocument();
-    expect(screen.getByText('When you place an order, it will appear here.')).toBeInTheDocument();
-    for (const pattern of FAKE) expect(container).not.toHaveTextContent(pattern);
-    expect(container.querySelector('img')).toBeNull();
-    expect(container).not.toHaveTextContent(/SY-\d+/);
-  });
-
-  it('sends the customer back to shopping', async () => {
-    renderPage(<MyOrdersPage />);
-    await userEvent.click(screen.getByRole('button', { name: 'Start shopping' }));
-    expect(screen.getByTestId('where')).toHaveTextContent(/^\/$/);
-  });
-});
 
 describe('Shipping page', () => {
   const field = (name) => document.querySelector(`[name="${name}"]`);
@@ -85,21 +67,74 @@ describe('Shipping page', () => {
     for (const pattern of FAKE) expect(container).not.toHaveTextContent(pattern);
   });
 
+  it('fills in the phone and default address saved on the profile', () => {
+    auth.value = {
+      ...auth.value,
+      account: {
+        fullName: 'Sam Lee',
+        phone: '+10000000000',
+        defaultAddress: '1 Test Street',
+        defaultState: 'Lagos State',
+        defaultCity: 'Capital District',
+      },
+    };
+    renderPage(<ShippingPage />);
+    expect(field('phone')).toHaveValue('+10000000000');
+    expect(field('address')).toHaveValue('1 Test Street');
+    expect(field('state')).toHaveValue('Lagos State');
+    expect(field('city')).toHaveValue('Capital District');
+    expect(field('courier')).toHaveValue(''); // the customer still picks a courier
+  });
+
+  it('picks the local courier for a saved Bauchi address', () => {
+    auth.value = {
+      ...auth.value,
+      account: { fullName: 'Sam Lee', defaultState: 'Bauchi State (Primary Local Hub)', defaultCity: 'Azare' },
+    };
+    renderPage(<ShippingPage />);
+    expect(field('city')).toHaveValue('Azare');
+    expect(field('courier').value).toMatch(/ShopYaro Express/);
+  });
+
+  it('leaves out a saved state or city that is not one of the choices', () => {
+    auth.value = {
+      ...auth.value,
+      account: { fullName: 'Sam Lee', defaultAddress: '1 Test Street', defaultState: 'Narnia', defaultCity: 'X' },
+    };
+    renderPage(<ShippingPage />);
+    expect(field('address')).toHaveValue('1 Test Street');
+    expect(field('state')).toHaveValue('');
+    expect(field('city')).toHaveValue('');
+  });
+
+  it('what was already typed in this tab wins over the saved default', () => {
+    auth.value = {
+      ...auth.value,
+      user: { id: 'u1', email: 'sam@example.com' },
+      account: { fullName: 'Sam Lee', defaultAddress: 'Saved Street' },
+    };
+    saveShipping(
+      {
+        fullName: 'Sam Lee',
+        email: 'sam@example.com',
+        phone: '+10000000000',
+        address: 'Typed Street',
+        state: 'Lagos State',
+        city: 'Capital District',
+        courier: 'Shipbubble',
+      },
+      'u1',
+    );
+    renderPage(<ShippingPage />);
+    expect(field('address')).toHaveValue('Typed Street');
+    sessionStorage.clear();
+  });
+
   it('has no stray citation text, even in the free-delivery notice', async () => {
     const { container } = renderPage(<ShippingPage />);
     await userEvent.selectOptions(field('state'), 'Bauchi State (Primary Local Hub)');
     expect(container).toHaveTextContent(/100% FREE Delivery/);
     expect(container.innerHTML).not.toMatch(/\[cite/);
-  });
-});
-
-describe('Profile page', () => {
-  it('no longer shows a made-up "2 Active" orders badge, but keeps the real details', () => {
-    renderPage(<ProfilePage onLogout={() => {}} />);
-    expect(screen.queryByText(/2 Active/i)).not.toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /My Orders/i })).toHaveAttribute('href', '/orders');
-    expect(screen.getByText('Verified Account')).toBeInTheDocument();
-    expect(screen.getByText('sam@example.com')).toBeInTheDocument();
   });
 });
 

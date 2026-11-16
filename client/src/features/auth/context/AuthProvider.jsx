@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { supabase } from '@/lib/supabase/client';
 
@@ -57,6 +57,24 @@ export default function AuthProvider({ children }) {
     };
   }, [userId]);
 
+  // Lets refreshAccount ignore an answer that arrives after the user has signed out or switched.
+  const currentUserId = useRef(null);
+  useEffect(() => {
+    currentUserId.current = userId;
+  }, [userId]);
+
+  /**
+   * Re-read the profile and role, e.g. after the customer saved their profile, so the navbar and
+   * every page show the new values. Resolves to false (and keeps what is shown) if the read fails.
+   */
+  const refreshAccount = useCallback(async () => {
+    if (!userId) return false;
+    const loaded = await fetchAccount(userId);
+    if (loaded.loadFailed || currentUserId.current !== userId) return false;
+    setAccount(loaded);
+    return true;
+  }, [userId]);
+
   const signOut = useCallback(async () => {
     await signOutLocal();
     setUser(null);
@@ -79,8 +97,9 @@ export default function AuthProvider({ children }) {
       role,
       isAdmin: role === 'admin',
       signOut,
+      refreshAccount,
     };
-  }, [ready, userId, effectiveUser, account, signOut]);
+  }, [ready, userId, effectiveUser, account, signOut, refreshAccount]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
