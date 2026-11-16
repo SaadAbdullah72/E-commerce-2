@@ -2,9 +2,9 @@ import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 
 import ProductImage from '@/features/catalog/components/ProductImage';
+import ConfirmDialog from '@/shared/components/ConfirmDialog';
 import { formatMoney } from '@/shared/lib/formatMoney';
 
-import ConfirmDialog from '../components/ConfirmDialog';
 import DeleteButton from '../components/DeleteButton';
 import DeleteConfirm from '../components/DeleteConfirm';
 import QueryState from '../components/QueryState';

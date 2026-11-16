@@ -1,7 +1,8 @@
 import { useState } from 'react';
 
+import ConfirmDialog from '@/shared/components/ConfirmDialog';
+
 import CategoryForm from '../components/CategoryForm';
-import ConfirmDialog from '../components/ConfirmDialog';
 import DeleteButton from '../components/DeleteButton';
 import DeleteConfirm from '../components/DeleteConfirm';
 import QueryState from '../components/QueryState';

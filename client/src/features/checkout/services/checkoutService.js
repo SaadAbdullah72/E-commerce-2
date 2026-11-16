@@ -119,6 +119,10 @@ function mapOrder(row) {
     trackingNumber: row.tracking_number,
     createdAt: row.created_at,
     paidAt: row.paid_at,
+    shippedAt: row.shipped_at ?? null,
+    deliveredAt: row.delivered_at ?? null,
+    cancelledAt: row.cancelled_at ?? null,
+    expiresAt: row.expires_at ?? null,
     shipping: {
       name: row.ship_name,
       email: row.ship_email,

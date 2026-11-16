@@ -2,8 +2,9 @@ import { ArrowDown, ArrowUp } from 'lucide-react';
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 
+import ConfirmDialog from '@/shared/components/ConfirmDialog';
+
 import BannerPreview from '../components/BannerPreview';
-import ConfirmDialog from '../components/ConfirmDialog';
 import DeleteButton from '../components/DeleteButton';
 import DeleteConfirm from '../components/DeleteConfirm';
 import QueryState from '../components/QueryState';

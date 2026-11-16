@@ -1,4 +1,4 @@
-import ConfirmDialog from './ConfirmDialog';
+import ConfirmDialog from '@/shared/components/ConfirmDialog';
 
 /**
  * "Delete permanently?" box. No typing needed, but the wording is plain about it being final.

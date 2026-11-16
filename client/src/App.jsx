@@ -20,8 +20,9 @@ import ResetPasswordPage from './features/auth/pages/ResetPasswordPage';
 import SignupPage from './features/auth/pages/SignupPage';
 import PrivacyPage from './features/legal/pages/PrivacyPage';
 import TermsPage from './features/legal/pages/TermsPage';
-import ProfilePage from './pages/ProfilePage';
-import MyOrdersPage from './pages/MyOrdersPage';
+import MyOrdersPage from './features/orders/pages/MyOrdersPage';
+import OrderDetailPage from './features/orders/pages/OrderDetailPage';
+import ProfilePage from './features/profile/pages/ProfilePage';
 import AuthLoading from './features/auth/components/AuthLoading';
 
 // The admin area is loaded only when an admin visits it, which keeps the storefront bundle small.
@@ -119,6 +120,14 @@ export default function App() {
           element={
             <ProtectedRoute>
               <MyOrdersPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/orders/:orderId"
+          element={
+            <ProtectedRoute>
+              <OrderDetailPage />
             </ProtectedRoute>
           }
         />
