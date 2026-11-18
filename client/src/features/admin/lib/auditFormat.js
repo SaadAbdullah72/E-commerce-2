@@ -8,6 +8,7 @@ export const TABLE_LABELS = {
   site_banners: 'Banners',
   user_roles: 'User roles',
   orders: 'Orders',
+  reviews: 'Reviews',
 };
 
 export const ACTION_LABELS = { insert: 'Created', update: 'Updated', delete: 'Deleted' };

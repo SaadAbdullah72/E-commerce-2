@@ -2,6 +2,7 @@ import { Store } from 'lucide-react';
 import { Link, NavLink } from 'react-router-dom';
 
 import { useOrderStats } from '../hooks/useAdminOrders';
+import { usePendingReviewCount } from '../hooks/useAdminReviews';
 import { ADMIN_SECTIONS } from '../lib/adminStats';
 import StatusBadge from './StatusBadge';
 
@@ -14,6 +15,8 @@ const linkClass = ({ isActive }) =>
 export default function AdminSidebar({ onNavigate }) {
   // Orders waiting to be shipped. If the numbers cannot load, no badge is shown (never a made-up 0).
   const toShip = useOrderStats((stats) => stats.toShip).data ?? 0;
+  // Reviews waiting for approval. Same rule: no badge when the count cannot load.
+  const pendingReviews = usePendingReviewCount().data ?? 0;
 
   return (
     <nav aria-label="Admin" className="space-y-1">
@@ -41,6 +44,15 @@ export default function AdminSidebar({ onNavigate }) {
                 className="rounded-full bg-amber-500 px-2 py-0.5 text-[10px] font-black text-white"
               >
                 {toShip}
+              </span>
+            )}
+            {section.path === 'reviews' && pendingReviews > 0 && (
+              <span
+                aria-label={`${pendingReviews} pending`}
+                title={`${pendingReviews} pending`}
+                className="rounded-full bg-amber-500 px-2 py-0.5 text-[10px] font-black text-white"
+              >
+                {pendingReviews}
               </span>
             )}
           </NavLink>

@@ -9,6 +9,7 @@ export const AUDIT_TABLES = [
   'site_banners',
   'user_roles',
   'orders',
+  'reviews',
 ];
 export const AUDIT_ACTIONS = ['insert', 'update', 'delete'];
 

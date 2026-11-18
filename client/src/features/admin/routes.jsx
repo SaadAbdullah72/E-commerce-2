@@ -3,6 +3,8 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 import AdminLayout from './components/AdminLayout';
 import AdminOrderDetailPage from './pages/AdminOrderDetailPage';
 import AdminOrdersPage from './pages/AdminOrdersPage';
+import AdminReviewDetailPage from './pages/AdminReviewDetailPage';
+import AdminReviewsPage from './pages/AdminReviewsPage';
 import AnalyticsPage from './pages/AnalyticsPage';
 import BannerEditPage from './pages/BannerEditPage';
 import BannersPage from './pages/BannersPage';
@@ -26,6 +28,8 @@ export default function AdminRoutes() {
         <Route path="categories" element={<CategoriesPage />} />
         <Route path="orders" element={<AdminOrdersPage />} />
         <Route path="orders/:id" element={<AdminOrderDetailPage />} />
+        <Route path="reviews" element={<AdminReviewsPage />} />
+        <Route path="reviews/:id" element={<AdminReviewDetailPage />} />
         <Route path="coupons" element={<CouponsPage />} />
         <Route path="coupons/new" element={<CouponEditPage />} />
         <Route path="coupons/:id" element={<CouponEditPage />} />

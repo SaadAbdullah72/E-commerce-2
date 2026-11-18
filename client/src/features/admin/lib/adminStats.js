@@ -18,6 +18,7 @@ export const ADMIN_SECTIONS = [
   { path: 'products', label: 'Products', ready: true },
   { path: 'categories', label: 'Categories', ready: true },
   { path: 'orders', label: 'Orders', ready: true },
+  { path: 'reviews', label: 'Reviews', ready: true },
   { path: 'coupons', label: 'Coupons', ready: true },
   { path: 'banners', label: 'Banners', ready: true },
   { path: 'analytics', label: 'Analytics', ready: true },
