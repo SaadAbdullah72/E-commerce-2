@@ -3,6 +3,7 @@ const TONES = {
   amber: 'bg-amber-500',
   red: 'bg-red-500',
   blue: 'bg-blue-600',
+  indigo: 'bg-indigo-500',
   gray: 'bg-gray-400',
 };
 

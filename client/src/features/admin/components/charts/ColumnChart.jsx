@@ -16,8 +16,9 @@ const shortDay = (day) =>
  * @param {object} props
  * @param {{ day: string, count: number }[]} props.points oldest first
  * @param {string} props.unit e.g. "sign-ups"
+ * @param {(value: number) => string} [props.formatValue] how a value is written (money, for example)
  */
-export default function ColumnChart({ points, unit }) {
+export default function ColumnChart({ points, unit, formatValue }) {
   if (points.length === 0) return null;
 
   const total = points.reduce((sum, point) => sum + point.count, 0);
@@ -31,7 +32,7 @@ export default function ColumnChart({ points, unit }) {
       <svg
         viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
         role="img"
-        aria-label={`${total} ${unit} between ${first} and ${last}`}
+        aria-label={`${formatValue ? formatValue(total) : total} ${unit} between ${first} and ${last}`}
         className="h-32 w-full text-blue-600"
         preserveAspectRatio="none"
       >
@@ -56,7 +57,7 @@ export default function ColumnChart({ points, unit }) {
               rx="1"
               fill="currentColor"
             >
-              <title>{`${shortDay(point.day)}: ${point.count} ${unit}`}</title>
+              <title>{`${shortDay(point.day)}: ${formatValue ? formatValue(point.count) : `${point.count} ${unit}`}`}</title>
             </rect>
           );
         })}

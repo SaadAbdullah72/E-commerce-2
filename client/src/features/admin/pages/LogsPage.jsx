@@ -162,8 +162,8 @@ export default function LogsPage() {
       <div>
         <h2 className="text-lg font-black text-gray-900">Activity log</h2>
         <p className="text-xs text-gray-500">
-          Every change to products, categories, deal tags, coupons, banners and admin roles. The log
-          is read-only: nobody can edit or delete it.
+          Every change to products, categories, deal tags, coupons, banners, admin roles and orders
+          (shipping and tracking). The log is read-only: nobody can edit or delete it.
         </p>
       </div>
 

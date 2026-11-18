@@ -8,6 +8,7 @@ export const AUDIT_TABLES = [
   'coupons',
   'site_banners',
   'user_roles',
+  'orders',
 ];
 export const AUDIT_ACTIONS = ['insert', 'update', 'delete'];
 

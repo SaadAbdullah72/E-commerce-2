@@ -1,10 +1,20 @@
 import { useAuth } from '@/features/auth/hooks/useAuth';
+import { formatMoney } from '@/shared/lib/formatMoney';
 
 import QueryState from '../components/QueryState';
 import StatCard from '../components/StatCard';
 import StatusBadge from '../components/StatusBadge';
 import { useAdminCount, useLowStockProducts } from '../hooks/useAdminData';
+import { useOrderStats } from '../hooks/useAdminOrders';
 import { LOW_STOCK_THRESHOLD, stockStatus } from '../lib/adminStats';
+import { paidOrderCount, primaryCurrency } from '../lib/orderStats';
+
+/** Revenue of the last 30 days in the currency with the most orders (gross: refunds are not deducted). */
+function revenueText(stats) {
+  const currency = primaryCurrency(stats.revenue);
+  const row = stats.revenue.find((item) => item.currency === currency);
+  return currency ? formatMoney(row.last30dMinor, currency) : formatMoney(0);
+}
 
 export default function OverviewPage() {
   const { user } = useAuth();
@@ -15,6 +25,10 @@ export default function OverviewPage() {
   const outOfStock = useAdminCount('outOfStock');
   const lowStock = useAdminCount('lowStock');
   const attention = useLowStockProducts();
+  const toShip = useOrderStats((stats) => stats.toShip);
+  const needsRefund = useOrderStats((stats) => stats.needsRefund);
+  const paidOrders = useOrderStats((stats) => paidOrderCount(stats.byStatus));
+  const revenue = useOrderStats(revenueText);
 
   return (
     <section className="space-y-6">
@@ -34,8 +48,10 @@ export default function OverviewPage() {
           query={lowStock}
           tone="warning"
         />
-        <StatCard label="Orders" note="Available after Phase 3" />
-        <StatCard label="Revenue" note="Available after Phase 3" />
+        <StatCard label="Orders to ship" query={toShip} tone="warning" />
+        <StatCard label="Orders needing a refund" query={needsRefund} tone="danger" />
+        <StatCard label="Paid orders" query={paidOrders} />
+        <StatCard label="Revenue, last 30 days" query={revenue} />
       </div>
 
       <div className="rounded-xl border border-gray-200 bg-white shadow-xs">

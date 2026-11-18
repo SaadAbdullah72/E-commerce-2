@@ -11,6 +11,8 @@ vi.mock('../services/auditLogService', async (importOriginal) => ({
   listAuditLog: logService.listAuditLog,
 }));
 vi.mock('../services/analyticsService', () => statsService);
+const orderStatsService = vi.hoisted(() => ({ getOrderStats: vi.fn() }));
+vi.mock('../services/orderAdminService', () => orderStatsService);
 vi.mock('@/lib/supabase/client', () => ({ supabase: {} }));
 
 import AnalyticsPage from './AnalyticsPage';
@@ -237,26 +239,81 @@ describe('AnalyticsPage', () => {
     expect(screen.getByText('Jan 2: 4 sign-ups')).toBeInTheDocument();
   });
 
-  it('says "No data yet" for orders and revenue instead of showing a made-up $0', async () => {
+  it('shows no revenue block (and no made-up $0) before the first paid order', async () => {
     statsService.getCatalogStats.mockResolvedValue(STATS);
+    orderStatsService.getOrderStats.mockResolvedValue({
+      today: '2030-01-30',
+      byStatus: { pending_payment: 1, paid: 0, shipped: 0, delivered: 0, cancelled: 0 },
+      toShip: 0,
+      needsRefund: 0,
+      revenue: [],
+      daily: [],
+      topProducts: [],
+    });
     renderPage(<AnalyticsPage />);
     await screen.findByText('Electronics');
 
-    expect(
-      screen.getAllByText('No data yet. Orders will appear here after checkout is built.'),
-    ).toHaveLength(2);
-    expect(screen.getByRole('heading', { name: 'Orders', level: 3 })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Revenue', level: 3 })).toBeInTheDocument();
+    expect(await screen.findByText(/No paid orders yet/)).toBeInTheDocument();
     expect(screen.queryByText('$0.00')).not.toBeInTheDocument();
   });
 
-  it('shows the placeholders even when the stats fail, plus an error with a retry', async () => {
+  it('shows real revenue, best sellers and the gross-revenue note', async () => {
+    statsService.getCatalogStats.mockResolvedValue(STATS);
+    orderStatsService.getOrderStats.mockResolvedValue({
+      today: '2030-01-30',
+      byStatus: { pending_payment: 0, paid: 2, shipped: 1, delivered: 1, cancelled: 3 },
+      toShip: 2,
+      needsRefund: 1,
+      revenue: [
+        {
+          currency: 'USD',
+          orders: 4,
+          allTimeMinor: 40000,
+          last24hMinor: 1000,
+          last7dMinor: 5000,
+          last30dMinor: 20000,
+          averageOrderMinor: 10000,
+        },
+      ],
+      daily: [{ day: '2030-01-30', currency: 'USD', orders: 1, revenueMinor: 1000 }],
+      topProducts: [
+        { productId: 'p1', title: 'Earbuds', currency: 'USD', units: 7, revenueMinor: 70000 },
+      ],
+    });
+    renderPage(<AnalyticsPage />);
+
+    expect(await screen.findByRole('heading', { name: 'Revenue (USD)' })).toBeInTheDocument();
+    expect(screen.getByText('$400.00')).toBeInTheDocument(); // all time
+    expect(screen.getByText('$100.00')).toBeInTheDocument(); // average order
+    expect(screen.getByText('Earbuds')).toBeInTheDocument();
+    expect(screen.getByText(/Revenue is gross/)).toHaveTextContent(/Refunds are handled manually/);
+    expect(screen.getByRole('img', { name: /\$10\.00 in revenue/ })).toBeInTheDocument();
+  });
+
+  it('shows the Electronics catalog numbers even when the order numbers fail', async () => {
+    statsService.getCatalogStats.mockResolvedValue(STATS);
+    orderStatsService.getOrderStats.mockRejectedValue(new Error('x'));
+    renderPage(<AnalyticsPage />);
+
+    expect(await screen.findByText('Electronics')).toBeInTheDocument();
+    expect(await screen.findByText(/couldn.t load the order numbers/i)).toBeInTheDocument();
+  });
+
+  it('shows an error with a retry when the stats fail, and no invented zeros', async () => {
     const user = userEvent.setup();
+    orderStatsService.getOrderStats.mockResolvedValue({
+      today: '2030-01-30',
+      byStatus: { pending_payment: 0, paid: 0, shipped: 0, delivered: 0, cancelled: 0 },
+      toShip: 0,
+      needsRefund: 0,
+      revenue: [],
+      daily: [],
+      topProducts: [],
+    });
     statsService.getCatalogStats.mockRejectedValueOnce(new Error('x'));
     renderPage(<AnalyticsPage />);
 
-    expect(await screen.findByRole('alert')).toHaveTextContent(/couldn.t load the analytics/i);
-    expect(screen.getAllByText(/No data yet/)).toHaveLength(2);
+    expect(await screen.findByText(/couldn.t load the analytics/i)).toBeInTheDocument();
     expect(screen.queryByText('Customers')).not.toBeInTheDocument(); // no invented zeros
 
     statsService.getCatalogStats.mockResolvedValue(STATS);

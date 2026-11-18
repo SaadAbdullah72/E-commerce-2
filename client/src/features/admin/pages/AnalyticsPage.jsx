@@ -1,3 +1,5 @@
+import { Info } from 'lucide-react';
+
 import { formatMoney } from '@/shared/lib/formatMoney';
 
 import ColumnChart from '../components/charts/ColumnChart';
@@ -5,7 +7,9 @@ import HBarChart from '../components/charts/HBarChart';
 import StackedBar from '../components/charts/StackedBar';
 import QueryState from '../components/QueryState';
 import { useCatalogStats } from '../hooks/useAdminData';
+import { useOrderStats } from '../hooks/useAdminOrders';
 import { LOW_STOCK_THRESHOLD } from '../lib/adminStats';
+import { fillDailyRevenue } from '../lib/orderStats';
 
 function Panel({ title, note, children }) {
   return (
@@ -27,15 +31,99 @@ function Kpi({ label, value, note }) {
   );
 }
 
-/** Orders and revenue do not exist yet. Say so plainly instead of showing a made-up 0. */
-function NoDataYet({ title }) {
+const GROSS_NOTE =
+  'Revenue is gross (it includes paid, shipped and delivered orders). Refunds are handled manually in Stripe and are not deducted. Days are counted in UTC.';
+
+/** Orders, revenue and best sellers: real numbers from `admin_order_stats()`. */
+function OrdersAnalytics() {
+  const query = useOrderStats();
+  const stats = query.data;
+
   return (
-    <section className="rounded-xl border border-dashed border-gray-300 bg-gray-50 p-4">
-      <h3 className="text-sm font-bold text-gray-700">{title}</h3>
-      <p className="mt-3 text-sm text-gray-500">
-        No data yet. Orders will appear here after checkout is built.
-      </p>
-    </section>
+    <div className="space-y-4">
+      <h3 className="text-base font-black text-gray-900">Orders and revenue</h3>
+      <QueryState query={query} isEmpty={false} emptyText="" label="order numbers">
+        {stats && (
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+              <Kpi label="To ship" value={stats.toShip.toLocaleString()} />
+              <Kpi label="Needs refund" value={stats.needsRefund.toLocaleString()} />
+              <Kpi label="Shipped" value={stats.byStatus.shipped.toLocaleString()} />
+              <Kpi label="Delivered" value={stats.byStatus.delivered.toLocaleString()} />
+            </div>
+
+            <Panel title="Orders by status">
+              <StackedBar
+                emptyText="No orders yet."
+                segments={[
+                  {
+                    label: 'Awaiting payment',
+                    value: stats.byStatus.pending_payment,
+                    tone: 'amber',
+                  },
+                  { label: 'Paid', value: stats.byStatus.paid, tone: 'blue' },
+                  { label: 'Shipped', value: stats.byStatus.shipped, tone: 'indigo' },
+                  { label: 'Delivered', value: stats.byStatus.delivered, tone: 'green' },
+                  { label: 'Cancelled', value: stats.byStatus.cancelled, tone: 'gray' },
+                ]}
+              />
+            </Panel>
+
+            {stats.revenue.length === 0 ? (
+              <section className="rounded-xl border border-dashed border-gray-300 bg-gray-50 p-4">
+                <h3 className="text-sm font-bold text-gray-700">Revenue</h3>
+                <p className="mt-3 text-sm text-gray-500">
+                  No paid orders yet. Revenue appears here after the first payment.
+                </p>
+              </section>
+            ) : (
+              stats.revenue.map((row) => {
+                const money = (minor) => formatMoney(minor, row.currency);
+                const products = stats.topProducts.filter((item) => item.currency === row.currency);
+                return (
+                  <div key={row.currency} className="space-y-4">
+                    <h4 className="text-sm font-black text-gray-900">Revenue ({row.currency})</h4>
+                    <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
+                      <Kpi label="Last 24 hours" value={money(row.last24hMinor)} />
+                      <Kpi label="Last 7 days" value={money(row.last7dMinor)} />
+                      <Kpi label="Last 30 days" value={money(row.last30dMinor)} />
+                      <Kpi label="All time" value={money(row.allTimeMinor)} />
+                      <Kpi label="Paid orders" value={row.orders.toLocaleString()} />
+                      <Kpi label="Average order" value={money(row.averageOrderMinor)} />
+                    </div>
+                    <div className="grid gap-4 lg:grid-cols-2">
+                      <Panel title="Revenue, last 30 days" note="Per day (UTC)">
+                        <ColumnChart
+                          points={fillDailyRevenue(stats.daily, row.currency, stats.today)}
+                          unit="in revenue"
+                          formatValue={money}
+                        />
+                      </Panel>
+                      <Panel title="Best sellers" note="By units sold">
+                        <HBarChart
+                          emptyText="No sales yet."
+                          rows={products.map((item) => ({
+                            id: `${item.productId}-${item.currency}`,
+                            label: item.title,
+                            value: item.units,
+                            extra: `units · ${money(item.revenueMinor)}`,
+                          }))}
+                        />
+                      </Panel>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+
+            <p className="flex items-start gap-1.5 text-xs text-gray-500">
+              <Info size={14} className="mt-0.5 shrink-0" aria-hidden="true" />
+              <span title={GROSS_NOTE}>{GROSS_NOTE}</span>
+            </p>
+          </div>
+        )}
+      </QueryState>
+    </div>
   );
 }
 
@@ -48,7 +136,7 @@ export default function AnalyticsPage() {
       <div>
         <h2 className="text-lg font-black text-gray-900">Analytics</h2>
         <p className="text-xs text-gray-500">
-          Live numbers from your catalog and customers. Sales figures arrive with checkout.
+          Live numbers from your catalog, customers and orders.
         </p>
       </div>
 
@@ -116,10 +204,7 @@ export default function AnalyticsPage() {
         )}
       </QueryState>
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        <NoDataYet title="Orders" />
-        <NoDataYet title="Revenue" />
-      </div>
+      <OrdersAnalytics />
     </section>
   );
 }

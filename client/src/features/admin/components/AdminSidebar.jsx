@@ -1,6 +1,7 @@
 import { Store } from 'lucide-react';
 import { Link, NavLink } from 'react-router-dom';
 
+import { useOrderStats } from '../hooks/useAdminOrders';
 import { ADMIN_SECTIONS } from '../lib/adminStats';
 import StatusBadge from './StatusBadge';
 
@@ -11,6 +12,9 @@ const linkClass = ({ isActive }) =>
 
 /** @param {{ onNavigate?: () => void }} props */
 export default function AdminSidebar({ onNavigate }) {
+  // Orders waiting to be shipped. If the numbers cannot load, no badge is shown (never a made-up 0).
+  const toShip = useOrderStats((stats) => stats.toShip).data ?? 0;
+
   return (
     <nav aria-label="Admin" className="space-y-1">
       <Link
@@ -30,6 +34,15 @@ export default function AdminSidebar({ onNavigate }) {
             className={linkClass}
           >
             {section.label}
+            {section.path === 'orders' && toShip > 0 && (
+              <span
+                aria-label={`${toShip} to ship`}
+                title={`${toShip} to ship`}
+                className="rounded-full bg-amber-500 px-2 py-0.5 text-[10px] font-black text-white"
+              >
+                {toShip}
+              </span>
+            )}
           </NavLink>
         ) : (
           <span

@@ -7,6 +7,7 @@ export const TABLE_LABELS = {
   coupons: 'Coupons',
   site_banners: 'Banners',
   user_roles: 'User roles',
+  orders: 'Orders',
 };
 
 export const ACTION_LABELS = { insert: 'Created', update: 'Updated', delete: 'Deleted' };

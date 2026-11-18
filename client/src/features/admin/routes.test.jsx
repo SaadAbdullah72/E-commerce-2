@@ -21,6 +21,8 @@ const service = vi.hoisted(() => ({
   listAdminCategories: vi.fn(),
 }));
 vi.mock('./services/adminService', () => service);
+const orderService = vi.hoisted(() => ({ getOrderStats: vi.fn(), listAdminOrders: vi.fn() }));
+vi.mock('./services/orderAdminService', () => orderService);
 vi.mock('@/lib/supabase/client', () => ({ supabase: {} }));
 
 import AdminRoutes from './routes';
@@ -66,6 +68,26 @@ beforeEach(() => {
   service.listLowStockProducts.mockResolvedValue([]);
   service.listAdminProducts.mockResolvedValue([]);
   service.listAdminCategories.mockResolvedValue([]);
+  orderService.listAdminOrders.mockResolvedValue({ orders: [], nextCursor: null });
+  orderService.getOrderStats.mockResolvedValue({
+    today: '2030-01-30',
+    byStatus: { pending_payment: 0, paid: 2, shipped: 1, delivered: 4, cancelled: 0 },
+    toShip: 2,
+    needsRefund: 1,
+    revenue: [
+      {
+        currency: 'USD',
+        orders: 7,
+        allTimeMinor: 90000,
+        last24hMinor: 0,
+        last7dMinor: 0,
+        last30dMinor: 20000,
+        averageOrderMinor: 12857,
+      },
+    ],
+    daily: [],
+    topProducts: [],
+  });
 });
 
 describe('admin layout', () => {
@@ -77,8 +99,11 @@ describe('admin layout', () => {
       'href',
       '/admin/products',
     );
-    expect(within(nav).queryByRole('link', { name: /orders/i })).not.toBeInTheDocument();
-    expect(within(nav).getByText('Phase 3')).toBeInTheDocument();
+    expect(within(nav).getByRole('link', { name: /orders/i })).toHaveAttribute(
+      'href',
+      '/admin/orders',
+    );
+    expect(within(nav).queryByText('Phase 3')).not.toBeInTheDocument();
     expect(within(nav).getByRole('link', { name: 'Coupons' })).toHaveAttribute(
       'href',
       '/admin/coupons',
@@ -120,7 +145,7 @@ describe('admin layout', () => {
 });
 
 describe('overview', () => {
-  it('shows real counts from the database and no invented orders or revenue', async () => {
+  it('shows real counts and order numbers from the database', async () => {
     renderAdmin();
 
     const card = async (label) =>
@@ -130,8 +155,12 @@ describe('overview', () => {
     expect(await within(await card('Out of stock')).findByText('1')).toBeInTheDocument();
     expect(await within(await card('Low stock (5 or fewer)')).findByText('3')).toBeInTheDocument();
 
-    expect(within(await card('Orders')).getByText(/after Phase 3/)).toBeInTheDocument();
-    expect(within(await card('Revenue')).getByText(/after Phase 3/)).toBeInTheDocument();
+    expect(await within(await card('Orders to ship')).findByText('2')).toBeInTheDocument();
+    expect(await within(await card('Orders needing a refund')).findByText('1')).toBeInTheDocument();
+    expect(await within(await card('Paid orders')).findByText('7')).toBeInTheDocument();
+    expect(
+      await within(await card('Revenue, last 30 days')).findByText('$200.00'),
+    ).toBeInTheDocument();
     expect(screen.queryByText('Huzaifa Javid')).not.toBeInTheDocument();
   });
 
@@ -230,10 +259,20 @@ describe('categories', () => {
 });
 
 describe('placeholders and unknown paths', () => {
-  it('shows an honest coming-soon page for orders', () => {
+  it('opens the orders list, and the sidebar shows how many orders are waiting to ship', async () => {
     renderAdmin('/admin/orders');
-    expect(screen.getByRole('heading', { name: 'Orders' })).toBeInTheDocument();
-    expect(screen.getByText(/coming in phase 3/i)).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Orders', level: 2 })).toBeInTheDocument();
+    expect(await screen.findByText('No orders yet.')).toBeInTheDocument();
+    const nav = screen.getByRole('navigation', { name: 'Admin' });
+    expect(await within(nav).findByLabelText('2 to ship')).toBeInTheDocument();
+  });
+
+  it('shows no "to ship" badge when the numbers cannot load (never a made-up 0)', async () => {
+    orderService.getOrderStats.mockRejectedValue(new Error('x'));
+    renderAdmin('/admin/orders');
+    await screen.findByText('No orders yet.');
+    const nav = screen.getByRole('navigation', { name: 'Admin' });
+    expect(within(nav).queryByLabelText(/to ship/)).not.toBeInTheDocument();
   });
 
   it('sends unknown admin paths back to the overview', async () => {

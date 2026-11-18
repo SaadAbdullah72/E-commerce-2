@@ -4,7 +4,7 @@
  *
  * @param {object} props
  * @param {string} props.label
- * @param {{ data?: number, isPending: boolean, isError: boolean, refetch: () => void }} [props.query]
+ * @param {{ data?: number | string, isPending: boolean, isError: boolean, refetch: () => void }} [props.query]
  * @param {string} [props.note] shown instead of a number when there is no query yet
  * @param {'default' | 'warning' | 'danger'} [props.tone]
  */
@@ -42,7 +42,11 @@ export default function StatCard({ label, query, note, tone = 'default' }) {
       </p>
     );
   } else {
-    body = <p className={`text-2xl font-black ${valueColor}`}>{query.data.toLocaleString()}</p>;
+    body = (
+      <p className={`text-2xl font-black ${valueColor}`}>
+        {typeof query.data === 'number' ? query.data.toLocaleString() : query.data}
+      </p>
+    );
   }
 
   return (
