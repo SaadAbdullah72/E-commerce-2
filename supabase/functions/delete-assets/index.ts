@@ -1,6 +1,8 @@
-// Removes unused pictures from Cloudinary. It works ONLY from the database queue
-// (cloudinary_cleanup_queue, migration 0007): the browser sends no public_ids, so a caller can
-// never ask for an arbitrary file to be deleted. The API secret never leaves this function.
+// Removes unused pictures and videos from Cloudinary. It works ONLY from the database queue
+// (cloudinary_cleanup_queue, migrations 0007 and 0013): the browser sends no public_ids, so a caller
+// can never ask for an arbitrary file to be deleted. The API secret never leaves this function.
+// Any signed-in user may trigger a run (a customer deleting their own review queues files that
+// must go too); it can only drain the queue, it cannot choose what is deleted, and it is rate limited.
 // Deployed by pasting into Supabase Dashboard -> Edge Functions (name: delete-assets, JWT verification ON).
 import { createClient } from 'npm:@supabase/supabase-js@2';
 
@@ -10,7 +12,8 @@ const ALLOWED_ORIGINS = new Set([
   'http://localhost:5174',
 ]);
 // Same shape the database enforces on the queue; checked again here as a second lock.
-const PUBLIC_ID_PATTERN = /^shopyaro\/(products|categories|banners)\/[A-Za-z0-9_-]+$/;
+const PUBLIC_ID_PATTERN =
+  /^(shopyaro\/(products|categories|banners)\/[A-Za-z0-9_-]+|shopyaro\/reviews\/[0-9a-f-]{36}\/(photo|video)\/[A-Za-z0-9_-]+)$/;
 const BATCH_SIZE = 20;
 const MAX_BATCHES = 5; // at most 100 pictures per call; the rest wait for the next call
 const MAX_CALLS_PER_MINUTE = 20;
@@ -49,9 +52,10 @@ async function sha1Hex(text: string) {
   return [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, '0')).join('');
 }
 
-/** Ask Cloudinary to delete one picture. Returns null on success, or a short reason. */
+/** Ask Cloudinary to delete one picture or video. Returns null on success, or a short reason. */
 async function destroy(
   publicId: string,
+  resourceType: 'image' | 'video',
   cloudName: string,
   apiKey: string,
   apiSecret: string,
@@ -73,7 +77,7 @@ async function destroy(
   form.set('signature', signature);
 
   try {
-    const response = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/destroy`, {
+    const response = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/${resourceType}/destroy`, {
       method: 'POST',
       body: form,
     });
@@ -103,7 +107,7 @@ Deno.serve(async (request) => {
     return reply({ error: 'Cleanup is not configured' }, 500, origin);
   }
 
-  // Who is calling, and are they an admin? Both are checked with the caller's own token.
+  // Who is calling? Checked with the caller's own token.
   const authorization = request.headers.get('Authorization') ?? '';
   const asCaller = createClient(supabaseUrl, anonKey, {
     global: { headers: { Authorization: authorization } },
@@ -111,9 +115,6 @@ Deno.serve(async (request) => {
   });
   const { data: userData, error: userError } = await asCaller.auth.getUser();
   if (userError || !userData.user) return reply({ error: 'Not signed in' }, 401, origin);
-
-  const { data: isAdmin, error: adminError } = await asCaller.rpc('is_admin');
-  if (adminError || isAdmin !== true) return reply({ error: 'Not allowed' }, 403, origin);
 
   if (tooMany(userData.user.id)) return reply({ error: 'Too many requests' }, 429, origin);
 
@@ -130,9 +131,15 @@ Deno.serve(async (request) => {
     if (!Array.isArray(batch) || batch.length === 0) break;
 
     const done: number[] = [];
-    for (const item of batch as { id: number; public_id: string }[]) {
+    for (const item of batch as { id: number; public_id: string; resource_type?: string }[]) {
       const problem = PUBLIC_ID_PATTERN.test(item.public_id)
-        ? await destroy(item.public_id, cloudName, apiKey, apiSecret)
+        ? await destroy(
+            item.public_id,
+            item.resource_type === 'video' ? 'video' : 'image',
+            cloudName,
+            apiKey,
+            apiSecret,
+          )
         : 'Not one of our upload paths';
       if (problem === null) {
         done.push(item.id);
