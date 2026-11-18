@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -9,7 +9,6 @@ vi.mock('../context/CartContext', () => ({
   useCart: () => ({ subtotalMinor: 2500, totalItems: 1, setIsCartOpen: vi.fn() }),
 }));
 
-import ProductReviewsSection from '../components/product/ProductReviewsSection';
 import { saveShipping } from '../features/checkout/lib/shippingStorage';
 import ShippingPage from './ShippingPage';
 
@@ -135,55 +134,5 @@ describe('Shipping page', () => {
     await userEvent.selectOptions(field('state'), 'Bauchi State (Primary Local Hub)');
     expect(container).toHaveTextContent(/100% FREE Delivery/);
     expect(container.innerHTML).not.toMatch(/\[cite/);
-  });
-});
-
-describe('Product reviews', () => {
-  it('says "No reviews yet." with no form, no invitation and no fake labels', () => {
-    const { container } = render(<ProductReviewsSection />);
-
-    expect(screen.getByRole('heading', { name: 'Customer Reviews (0)' })).toBeInTheDocument();
-    expect(screen.getByText('No reviews yet.')).toBeInTheDocument();
-    expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
-    expect(screen.queryByRole('button')).not.toBeInTheDocument();
-    expect(screen.queryByText(/be the first/i)).not.toBeInTheDocument();
-    expect(screen.queryByText(/sign in to write/i)).not.toBeInTheDocument();
-    for (const pattern of FAKE) expect(container).not.toHaveTextContent(pattern);
-  });
-
-  it('shows real reviews if some are passed in, with no "verified" label of its own', () => {
-    const { container } = render(
-      <ProductReviewsSection
-        reviews={[
-          { id: 'r1', userName: 'Ada', rating: 4, date: 'Jan 1', comment: 'Works well.' },
-          { id: 'r2', userName: 'Bo', rating: 5, date: 'Jan 2', comment: 'Great.' },
-        ]}
-      />,
-    );
-    expect(screen.getByRole('heading', { name: 'Customer Reviews (2)' })).toBeInTheDocument();
-    expect(screen.getByText('4.5')).toBeInTheDocument();
-    expect(screen.getByText('Works well.')).toBeInTheDocument();
-    expect(screen.getByRole('img', { name: '4 out of 5 stars' })).toBeInTheDocument();
-    expect(screen.queryByText('No reviews yet.')).not.toBeInTheDocument();
-    expect(container).not.toHaveTextContent(/verified/i);
-  });
-
-  it('shows review text as plain text, never as markup', () => {
-    const { container } = render(
-      <ProductReviewsSection
-        reviews={[
-          {
-            id: 'r1',
-            userName: '<b>x</b>',
-            rating: 3,
-            date: 'Jan 1',
-            comment: '<img src=x onerror=alert(1)>',
-          },
-        ]}
-      />,
-    );
-    expect(container.querySelector('img')).toBeNull();
-    expect(container.querySelector('b')).toBeNull();
-    expect(screen.getByText('<img src=x onerror=alert(1)>')).toBeInTheDocument();
   });
 });

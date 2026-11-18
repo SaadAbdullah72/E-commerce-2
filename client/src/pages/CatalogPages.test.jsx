@@ -15,6 +15,8 @@ const service = vi.hoisted(() => ({
 }));
 vi.mock('@/features/catalog/services/catalogService', () => service);
 vi.mock('@/components/home/HeroSlider', () => ({ default: () => <div>hero</div> }));
+// Reviews have their own tests (ProductReviewsSection.test.jsx); this file is about the catalog.
+vi.mock('@/components/product/ProductReviewsSection', () => ({ default: () => null }));
 
 import CategoryPage from './CategoryPage';
 import HomePage from './HomePage';
