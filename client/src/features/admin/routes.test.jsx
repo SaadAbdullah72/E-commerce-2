@@ -156,10 +156,10 @@ describe('overview', () => {
     expect(await within(await card('Low stock (5 or fewer)')).findByText('3')).toBeInTheDocument();
 
     expect(await within(await card('Orders to ship')).findByText('2')).toBeInTheDocument();
-    expect(await within(await card('Orders needing a refund')).findByText('1')).toBeInTheDocument();
+    expect(await within(await card('Needs refund')).findByText('1')).toBeInTheDocument();
     expect(await within(await card('Paid orders')).findByText('7')).toBeInTheDocument();
     expect(
-      await within(await card('Revenue, last 30 days')).findByText('$200.00'),
+      await within(await card('Revenue (last 30 days)')).findByText('$200.00'),
     ).toBeInTheDocument();
     expect(screen.queryByText('Huzaifa Javid')).not.toBeInTheDocument();
   });
