@@ -12,6 +12,7 @@ import TableSkeleton from '@/shared/ui/TableSkeleton';
  * @param {string} props.label what is loading, for screen readers
  * @param {import('react').ComponentType} [props.emptyIcon] a lucide icon for the empty state
  * @param {import('react').ReactNode} [props.emptyAction] a button or link for the empty state
+ * @param {import('react').ReactNode} [props.skeleton] what to show while loading, when it should look like the final page (default: table rows)
  * @param {import('react').ReactNode} props.children shown when there is data
  */
 export default function QueryState({
@@ -21,9 +22,10 @@ export default function QueryState({
   label,
   emptyIcon,
   emptyAction,
+  skeleton,
   children,
 }) {
-  if (query.isPending) return <TableSkeleton label={label} />;
+  if (query.isPending) return skeleton ?? <TableSkeleton label={label} />;
   if (query.isError) {
     return (
       <ErrorState message={`We couldn't load the ${label}.`} onRetry={() => query.refetch()} />
