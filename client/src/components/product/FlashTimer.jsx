@@ -1,23 +1,21 @@
-import React, { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
+
+function calculateTimeLeft(targetDate) {
+  const difference = +new Date(targetDate) - +new Date();
+  if (difference <= 0) return { hours: 0, minutes: 0, seconds: 0 };
+
+  return {
+    hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
+    minutes: Math.floor((difference / 1000 / 60) % 60),
+    seconds: Math.floor((difference / 1000) % 60),
+  };
+}
 
 export default function FlashTimer({ targetDate }) {
-  const calculateTimeLeft = () => {
-    const difference = +new Date(targetDate) - +new Date();
-    if (difference <= 0) return { hours: 0, minutes: 0, seconds: 0 };
-
-    return {
-      hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
-      minutes: Math.floor((difference / 1000 / 60) % 60),
-      seconds: Math.floor((difference / 1000) % 60),
-    };
-  };
-
-  const [timeLeft, setTimeLeft] = useState(calculateTimeLeft());
+  const [timeLeft, setTimeLeft] = useState(() => calculateTimeLeft(targetDate));
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      setTimeLeft(calculateTimeLeft());
-    }, 1000);
+    const timer = setInterval(() => setTimeLeft(calculateTimeLeft(targetDate)), 1000);
     return () => clearInterval(timer);
   }, [targetDate]);
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState } from 'react';
 import AnnouncementTicker from '../../features/banners/components/AnnouncementTicker';
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { ShoppingCart, Search, ShieldCheck, User, Zap, X } from 'lucide-react';
@@ -14,15 +14,15 @@ export default function Navbar({ onSearch, onSelectCategory }) {
   const { status, account, isAdmin } = useAuth();
 
   const isHomePage = location.pathname === '/';
-  const [searchTerm, setSearchTerm] = useState('');
-
-  // Synchronize search input with URL ONLY when on the HomePage
-  useEffect(() => {
-    if (isHomePage) {
-      const urlKeyword = searchParams.get('keyword') || '';
-      setSearchTerm(urlKeyword);
-    }
-  }, [searchParams, isHomePage]);
+  // The search box follows the URL keyword, but only on the home page. State is adjusted while
+  // rendering (not in an effect) so the box never shows a stale value for a frame.
+  const urlKeyword = isHomePage ? searchParams.get('keyword') || '' : null;
+  const [searchTerm, setSearchTerm] = useState(urlKeyword ?? '');
+  const [syncedKeyword, setSyncedKeyword] = useState(urlKeyword);
+  if (urlKeyword !== syncedKeyword) {
+    setSyncedKeyword(urlKeyword);
+    if (urlKeyword !== null) setSearchTerm(urlKeyword);
+  }
 
   const categories = [
     'Lightning Deals',
