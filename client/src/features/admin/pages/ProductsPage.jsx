@@ -21,6 +21,7 @@ import StockMeter from '../components/StockMeter';
 import { useAdminProducts } from '../hooks/useAdminData';
 import { useDeleteProduct, useSetProductActive } from '../hooks/useAdminMutations';
 import { stockStatus } from '../lib/adminStats';
+import { cardTable, cardTableRoles } from '../lib/cardTable';
 
 const STOCK_BADGE = {
   out: { tone: 'red', text: 'Out of stock' },
@@ -124,26 +125,29 @@ export default function ProductsPage() {
           }
           emptyAction={query.data?.length ? undefined : addProduct}
         >
-          <table className="w-full min-w-170 text-left text-sm">
+          <table
+            className={`w-full min-w-170 text-left text-sm ${cardTable.table}`}
+            {...cardTableRoles.table}
+          >
             <caption className="sr-only">Products</caption>
-            <thead className="bg-gray-50">
-              <tr>
-                <Th>Product</Th>
-                <Th>Category</Th>
-                <Th>Price</Th>
-                <Th>Stock</Th>
-                <Th>Status</Th>
-                <Th className="max-md:sticky max-md:right-0 max-md:bg-gray-50">
+            <thead className={`bg-gray-50 ${cardTable.head}`} {...cardTableRoles.head}>
+              <tr {...cardTableRoles.row}>
+                <Th {...cardTableRoles.header}>Product</Th>
+                <Th {...cardTableRoles.header}>Category</Th>
+                <Th {...cardTableRoles.header}>Price</Th>
+                <Th {...cardTableRoles.header}>Stock</Th>
+                <Th {...cardTableRoles.header}>Status</Th>
+                <Th {...cardTableRoles.header}>
                   <span className="sr-only">Actions</span>
                 </Th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className={cardTable.body} {...cardTableRoles.body}>
               {products.map((product) => {
                 const badge = STOCK_BADGE[stockStatus(product.stock)];
                 return (
-                  <Tr key={product.id}>
-                    <Td>
+                  <Tr key={product.id} className={cardTable.row} {...cardTableRoles.row}>
+                    <Td className={cardTable.titleCell} {...cardTableRoles.cell}>
                       <div className="flex items-center gap-3">
                         <ProductImage
                           src={product.image}
@@ -158,12 +162,23 @@ export default function ProductsPage() {
                         </div>
                       </div>
                     </Td>
-                    <Td className="text-gray-600">{product.category || '-'}</Td>
-                    <Td numeric className="text-gray-900">
+                    <Td
+                      className={`text-gray-600 ${cardTable.cell}`}
+                      data-label="Category"
+                      {...cardTableRoles.cell}
+                    >
+                      {product.category || '-'}
+                    </Td>
+                    <Td
+                      numeric
+                      className={`text-gray-900 ${cardTable.cell}`}
+                      data-label="Price"
+                      {...cardTableRoles.cell}
+                    >
                       {formatMoney(product.priceMinor, product.currency)}
                     </Td>
-                    <Td>
-                      <div className="flex flex-col items-start gap-1.5">
+                    <Td className={cardTable.cell} data-label="Stock" {...cardTableRoles.cell}>
+                      <div className="flex flex-col items-start gap-1.5 max-md:items-end">
                         <div className="flex items-center gap-2">
                           <span className="tabular-nums text-gray-700">{product.stock}</span>
                           <StatusBadge tone={badge.tone}>{badge.text}</StatusBadge>
@@ -171,12 +186,16 @@ export default function ProductsPage() {
                         <StockMeter stock={product.stock} />
                       </div>
                     </Td>
-                    <Td>
+                    <Td className={cardTable.cell} data-label="Status" {...cardTableRoles.cell}>
                       <StatusBadge tone={product.isActive ? 'green' : 'gray'}>
                         {product.isActive ? 'Active' : 'Inactive'}
                       </StatusBadge>
                     </Td>
-                    <Td align="right" className="whitespace-nowrap max-md:sticky max-md:right-0 max-md:bg-white max-md:shadow-[-8px_0_8px_-8px_rgba(0,0,0,0.15)]">
+                    <Td
+                      align="right"
+                      className={`whitespace-nowrap ${cardTable.actionsCell}`}
+                      {...cardTableRoles.cell}
+                    >
                       <div className="flex items-center justify-end gap-1">
                         <IconAction
                           to={`/admin/products/${product.id}`}

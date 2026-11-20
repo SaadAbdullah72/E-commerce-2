@@ -1,10 +1,17 @@
+import { Ban, Folder, Pencil, Plus, RotateCcw } from 'lucide-react';
 import { useState } from 'react';
 
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
+import Button from '@/shared/ui/Button';
+import { Card } from '@/shared/ui/Card';
+import PageHeader from '@/shared/ui/PageHeader';
+import { Td, Th, Tr } from '@/shared/ui/Table';
 
 import CategoryForm from '../components/CategoryForm';
 import DeleteButton from '../components/DeleteButton';
 import DeleteConfirm from '../components/DeleteConfirm';
+import IconAction from '../components/IconAction';
+import NoticeBanner from '../components/NoticeBanner';
 import QueryState from '../components/QueryState';
 import StatusBadge from '../components/StatusBadge';
 import { useAdminCategories, useAdminCategory } from '../hooks/useAdminData';
@@ -13,6 +20,7 @@ import {
   useSaveCategory,
   useSetCategoryActive,
 } from '../hooks/useAdminMutations';
+import { cardTable, cardTableRoles } from '../lib/cardTable';
 import { countActiveProductsInCategory } from '../services/categoryAdminService';
 
 /** The add / edit dialog. For an existing category it loads the full record first. */
@@ -111,102 +119,107 @@ export default function CategoriesPage() {
 
   return (
     <section className="space-y-4">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h2 className="text-lg font-black text-gray-900">Categories</h2>
-          <p className="text-xs text-gray-500">
-            Deactivated categories are hidden from the shop. A category can only be deleted when it
-            has no products.
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={() => setDialog({ id: null })}
-          className="cursor-pointer rounded-md bg-blue-600 px-3 py-1.5 text-sm font-bold text-white hover:bg-blue-700"
-        >
-          Add category
-        </button>
-      </div>
+      <PageHeader
+        title="Categories"
+        description="Deactivated categories are hidden from the shop. A category can only be deleted when it has no products."
+        action={
+          <Button onClick={() => setDialog({ id: null })}>
+            <Plus size={16} aria-hidden="true" />
+            Add category
+          </Button>
+        }
+      />
 
-      {notice && (
-        <p
-          role="status"
-          className="flex items-center justify-between rounded-md border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-800"
-        >
-          {notice}
-          <button
-            type="button"
-            onClick={() => setNotice('')}
-            className="cursor-pointer text-xs font-bold underline"
-          >
-            Dismiss
-          </button>
-        </p>
-      )}
+      {notice && <NoticeBanner onDismiss={() => setNotice('')}>{notice}</NoticeBanner>}
 
-      <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white shadow-xs">
+      <Card flush className="relative overflow-x-auto">
         <QueryState
           query={query}
           label="categories"
           isEmpty={query.data?.length === 0}
+          emptyIcon={Folder}
           emptyText="There are no categories yet."
         >
-          <table className="w-full min-w-96 text-left text-sm">
-            <thead className="bg-gray-50 text-xs text-gray-500">
-              <tr>
-                <th className="px-4 py-2 font-semibold">Name</th>
-                <th className="px-4 py-2 font-semibold">Slug</th>
-                <th className="px-4 py-2 font-semibold">Order</th>
-                <th className="px-4 py-2 font-semibold">Status</th>
-                <th className="px-4 py-2 font-semibold">
+          <table
+            className={`w-full min-w-96 text-left text-sm ${cardTable.table}`}
+            {...cardTableRoles.table}
+          >
+            <caption className="sr-only">Categories</caption>
+            <thead className={`bg-gray-50 ${cardTable.head}`} {...cardTableRoles.head}>
+              <tr {...cardTableRoles.row}>
+                <Th {...cardTableRoles.header}>Name</Th>
+                <Th {...cardTableRoles.header}>Slug</Th>
+                <Th {...cardTableRoles.header}>Order</Th>
+                <Th {...cardTableRoles.header}>Status</Th>
+                <Th {...cardTableRoles.header}>
                   <span className="sr-only">Actions</span>
-                </th>
+                </Th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className={cardTable.body} {...cardTableRoles.body}>
               {query.data?.map((category) => (
-                <tr key={category.id}>
-                  <td className="px-4 py-2 font-semibold text-gray-900">{category.name}</td>
-                  <td className="px-4 py-2 text-gray-600">{category.slug}</td>
-                  <td className="px-4 py-2 text-gray-600">{category.sortOrder}</td>
-                  <td className="px-4 py-2">
+                <Tr key={category.id} className={cardTable.row} {...cardTableRoles.row}>
+                  <Td
+                    className={`font-semibold text-gray-900 ${cardTable.titleCell}`}
+                    {...cardTableRoles.cell}
+                  >
+                    {category.name}
+                  </Td>
+                  <Td
+                    className={`text-gray-600 ${cardTable.cell}`}
+                    data-label="Slug"
+                    {...cardTableRoles.cell}
+                  >
+                    {category.slug}
+                  </Td>
+                  <Td
+                    numeric
+                    className={`text-gray-600 ${cardTable.cell}`}
+                    data-label="Order"
+                    {...cardTableRoles.cell}
+                  >
+                    {category.sortOrder}
+                  </Td>
+                  <Td className={cardTable.cell} data-label="Status" {...cardTableRoles.cell}>
                     <StatusBadge tone={category.isActive ? 'green' : 'gray'}>
                       {category.isActive ? 'Active' : 'Inactive'}
                     </StatusBadge>
-                  </td>
-                  <td className="px-4 py-2 text-right whitespace-nowrap">
-                    <button
-                      type="button"
-                      onClick={() => setDialog({ id: category.id })}
-                      aria-label={`Edit ${category.name}`}
-                      className="mr-3 cursor-pointer text-xs font-bold text-blue-600 hover:underline"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => askToToggle(category)}
-                      aria-label={`${category.isActive ? 'Deactivate' : 'Restore'} ${category.name}`}
-                      className={`cursor-pointer text-xs font-bold hover:underline ${
-                        category.isActive ? 'text-red-600' : 'text-green-700'
-                      }`}
-                    >
-                      {category.isActive ? 'Deactivate' : 'Restore'}
-                    </button>
-                    <DeleteButton
-                      label={category.name}
-                      onClick={() => {
-                        remove.reset();
-                        setDeleting(category);
-                      }}
-                    />
-                  </td>
-                </tr>
+                  </Td>
+                  <Td
+                    align="right"
+                    className={`whitespace-nowrap ${cardTable.actionsCell}`}
+                    {...cardTableRoles.cell}
+                  >
+                    <div className="flex items-center justify-end gap-1">
+                      <IconAction
+                        onClick={() => setDialog({ id: category.id })}
+                        label={`Edit ${category.name}`}
+                        tip="Edit"
+                        icon={Pencil}
+                        tone="blue"
+                      />
+                      <IconAction
+                        onClick={() => askToToggle(category)}
+                        label={`${category.isActive ? 'Deactivate' : 'Restore'} ${category.name}`}
+                        tip={category.isActive ? 'Deactivate' : 'Restore'}
+                        icon={category.isActive ? Ban : RotateCcw}
+                        tone={category.isActive ? 'red' : 'green'}
+                      />
+                      <DeleteButton
+                        label={category.name}
+                        onClick={() => {
+                          remove.reset();
+                          setDeleting(category);
+                        }}
+                      />
+                    </div>
+                  </Td>
+                </Tr>
               ))}
             </tbody>
           </table>
         </QueryState>
-      </div>
+      </Card>
 
       {dialog && (
         <CategoryDialog

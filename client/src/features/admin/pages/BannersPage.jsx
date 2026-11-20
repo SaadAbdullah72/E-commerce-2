@@ -1,12 +1,18 @@
-import { ArrowDown, ArrowUp } from 'lucide-react';
+import { ArrowDown, ArrowUp, Ban, Image as ImageIcon, Pencil, Plus, RotateCcw } from 'lucide-react';
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
+import { focusRing } from '@/shared/design/tokens';
+import { buttonClass } from '@/shared/ui/buttonStyles';
+import { Card } from '@/shared/ui/Card';
+import PageHeader from '@/shared/ui/PageHeader';
 
 import BannerPreview from '../components/BannerPreview';
 import DeleteButton from '../components/DeleteButton';
 import DeleteConfirm from '../components/DeleteConfirm';
+import IconAction from '../components/IconAction';
+import NoticeBanner from '../components/NoticeBanner';
 import QueryState from '../components/QueryState';
 import StatusBadge from '../components/StatusBadge';
 import { useAdminBanners } from '../hooks/useAdminData';
@@ -16,6 +22,7 @@ import {
   useSwapBannerOrder,
 } from '../hooks/useAdminMutations';
 import { MAX_ACTIVE_BANNERS } from '../lib/bannerSchema';
+import { iconActionClass } from '../lib/iconActionStyles';
 
 const KINDS = [
   { key: 'hero', label: 'Hero slides', singular: 'hero slide', addLabel: 'Add slide' },
@@ -88,28 +95,30 @@ function BannerList({ kind, onNotice }) {
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <p className="text-xs text-gray-500">
+        <p className="text-sm text-gray-600">
           {activeCount} of {limit} active. Pause hides a banner; delete removes it for good.
         </p>
-        <Link
-          to={`/admin/banners/new?kind=${kind.key}`}
-          className="rounded-md bg-blue-600 px-3 py-1.5 text-sm font-bold text-white hover:bg-blue-700"
-        >
+        <Link to={`/admin/banners/new?kind=${kind.key}`} className={buttonClass()}>
+          <Plus size={16} aria-hidden="true" />
           {kind.addLabel}
         </Link>
       </div>
 
       {swap.isError && (
-        <p role="alert" className="text-sm text-red-600">
+        <p
+          role="alert"
+          className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800"
+        >
           {swap.error.message}
         </p>
       )}
 
-      <div className="rounded-xl border border-gray-200 bg-white shadow-xs">
+      <Card flush>
         <QueryState
           query={query}
           label={kind.label.toLowerCase()}
           isEmpty={banners.length === 0}
+          emptyIcon={ImageIcon}
           emptyText={`There are no ${kind.label.toLowerCase()} yet. Nothing is shown in the shop for this.`}
         >
           <ul className="divide-y divide-gray-100">
@@ -128,7 +137,7 @@ function BannerList({ kind, onNotice }) {
                       imageUrl={banner.imageUrl}
                     />
                   </div>
-                  <div className="flex shrink-0 flex-wrap items-center gap-3">
+                  <div className="flex shrink-0 flex-wrap items-center gap-x-3 gap-y-2">
                     <StatusBadge tone={badge.tone}>{badge.text}</StatusBadge>
                     <span className="flex gap-1">
                       <button
@@ -136,54 +145,53 @@ function BannerList({ kind, onNotice }) {
                         aria-label={`Move ${banner.title} up`}
                         disabled={index === 0 || swap.isPending}
                         onClick={() => move(index, -1)}
-                        className="cursor-pointer rounded border border-gray-200 p-1 text-gray-600 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-40"
+                        className={`${iconActionClass()} border border-gray-200 disabled:cursor-not-allowed disabled:opacity-40`}
                       >
-                        <ArrowUp size={14} />
+                        <ArrowUp size={16} aria-hidden="true" />
                       </button>
                       <button
                         type="button"
                         aria-label={`Move ${banner.title} down`}
                         disabled={index === banners.length - 1 || swap.isPending}
                         onClick={() => move(index, 1)}
-                        className="cursor-pointer rounded border border-gray-200 p-1 text-gray-600 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-40"
+                        className={`${iconActionClass()} border border-gray-200 disabled:cursor-not-allowed disabled:opacity-40`}
                       >
-                        <ArrowDown size={14} />
+                        <ArrowDown size={16} aria-hidden="true" />
                       </button>
                     </span>
-                    <Link
-                      to={`/admin/banners/${banner.id}`}
-                      aria-label={`Edit ${banner.title}`}
-                      className="text-xs font-bold text-blue-600 hover:underline"
-                    >
-                      Edit
-                    </Link>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setActive.reset();
-                        setPending(banner);
-                      }}
-                      aria-label={`${banner.isActive ? 'Pause' : 'Resume'} ${banner.title}`}
-                      className={`cursor-pointer text-xs font-bold hover:underline ${
-                        banner.isActive ? 'text-red-600' : 'text-green-700'
-                      }`}
-                    >
-                      {banner.isActive ? 'Pause' : 'Resume'}
-                    </button>
-                    <DeleteButton
-                      label={banner.title}
-                      onClick={() => {
-                        remove.reset();
-                        setDeleting(banner);
-                      }}
-                    />
+                    <span className="flex items-center gap-1">
+                      <IconAction
+                        to={`/admin/banners/${banner.id}`}
+                        label={`Edit ${banner.title}`}
+                        tip="Edit"
+                        icon={Pencil}
+                        tone="blue"
+                      />
+                      <IconAction
+                        onClick={() => {
+                          setActive.reset();
+                          setPending(banner);
+                        }}
+                        label={`${banner.isActive ? 'Pause' : 'Resume'} ${banner.title}`}
+                        tip={banner.isActive ? 'Pause' : 'Resume'}
+                        icon={banner.isActive ? Ban : RotateCcw}
+                        tone={banner.isActive ? 'red' : 'green'}
+                      />
+                      <DeleteButton
+                        label={banner.title}
+                        onClick={() => {
+                          remove.reset();
+                          setDeleting(banner);
+                        }}
+                      />
+                    </span>
                   </div>
                 </li>
               );
             })}
           </ul>
         </QueryState>
-      </div>
+      </Card>
 
       {pending && (
         <ConfirmDialog
@@ -232,12 +240,10 @@ export default function BannersPage() {
 
   return (
     <section className="space-y-4">
-      <div>
-        <h2 className="text-lg font-black text-gray-900">Banners</h2>
-        <p className="text-xs text-gray-500">
-          What visitors see at the top of the shop. Changes appear within a minute.
-        </p>
-      </div>
+      <PageHeader
+        title="Banners"
+        description="What visitors see at the top of the shop. Changes appear within a minute."
+      />
 
       <div role="tablist" aria-label="Banner type" className="flex gap-1 border-b border-gray-200">
         {KINDS.map((item) => (
@@ -247,10 +253,10 @@ export default function BannersPage() {
             role="tab"
             aria-selected={item.key === kind.key}
             onClick={() => setKindKey(item.key)}
-            className={`cursor-pointer border-b-2 px-4 py-2 text-sm font-semibold ${
+            className={`-mb-px cursor-pointer border-b-2 px-4 py-2 text-sm font-semibold transition-colors duration-150 max-md:min-h-11 ${focusRing} ${
               item.key === kind.key
-                ? 'border-blue-600 text-blue-600'
-                : 'border-transparent text-gray-500 hover:text-gray-800'
+                ? 'border-blue-600 text-blue-700'
+                : 'border-transparent text-gray-600 hover:text-gray-900'
             }`}
           >
             {item.label}
@@ -258,21 +264,7 @@ export default function BannersPage() {
         ))}
       </div>
 
-      {notice && (
-        <p
-          role="status"
-          className="flex items-center justify-between rounded-md border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-800"
-        >
-          {notice}
-          <button
-            type="button"
-            onClick={() => setNotice('')}
-            className="cursor-pointer text-xs font-bold underline"
-          >
-            Dismiss
-          </button>
-        </p>
-      )}
+      {notice && <NoticeBanner onDismiss={() => setNotice('')}>{notice}</NoticeBanner>}
 
       <BannerList key={kind.key} kind={kind} onNotice={setNotice} />
     </section>

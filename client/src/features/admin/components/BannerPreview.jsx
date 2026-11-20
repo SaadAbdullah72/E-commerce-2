@@ -30,20 +30,20 @@ export default function BannerPreview({
 
   return (
     <div
-      className={`flex h-28 items-center justify-between overflow-hidden rounded-lg bg-gradient-to-r px-4 text-white ${look.gradient}`}
+      className={`flex h-32 items-center justify-between overflow-hidden rounded-lg bg-gradient-to-r px-4 text-white ${look.gradient}`}
     >
       <div className="min-w-0 space-y-1">
         {badge && (
           <span
-            className={`inline-block rounded-full px-2 py-0.5 text-[9px] font-black uppercase ${look.accent}`}
+            className={`inline-block rounded-full px-2 py-0.5 text-xs font-black uppercase ${look.accent}`}
           >
             {badge}
           </span>
         )}
         <p className="truncate text-lg leading-tight font-black">{title || 'Your headline'}</p>
-        {subtitle && <p className="truncate text-[11px] text-gray-200">{subtitle}</p>}
+        {subtitle && <p className="truncate text-xs text-gray-100">{subtitle}</p>}
         {buttonText && (
-          <span className="inline-flex items-center gap-1 rounded-full bg-white px-3 py-1 text-[10px] font-extrabold text-gray-900">
+          <span className="inline-flex items-center gap-1 rounded-full bg-white px-3 py-1 text-xs font-extrabold text-gray-900">
             {buttonText} <ArrowRight size={10} aria-hidden="true" />
           </span>
         )}

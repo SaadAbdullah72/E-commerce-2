@@ -21,6 +21,7 @@ import StatusBadge from '../components/StatusBadge';
 import UsageMeter from '../components/UsageMeter';
 import { useAdminCoupons } from '../hooks/useAdminData';
 import { useDeleteCoupon, useSetCouponActive } from '../hooks/useAdminMutations';
+import { cardTable, cardTableRoles } from '../lib/cardTable';
 import { couponStatus, describeDiscount } from '../lib/couponSchema';
 
 const STATUS = {
@@ -140,27 +141,30 @@ export default function CouponsPage() {
           }
           emptyAction={query.data?.length ? undefined : addCoupon}
         >
-          <table className="w-full min-w-200 text-left text-sm">
+          <table
+            className={`w-full min-w-200 text-left text-sm ${cardTable.table}`}
+            {...cardTableRoles.table}
+          >
             <caption className="sr-only">Coupons</caption>
-            <thead className="bg-gray-50">
-              <tr>
-                <Th>Code</Th>
-                <Th>Discount</Th>
-                <Th>Minimum order</Th>
-                <Th>Valid</Th>
-                <Th>Used</Th>
-                <Th>Status</Th>
-                <Th className="max-md:sticky max-md:right-0 max-md:bg-gray-50">
+            <thead className={`bg-gray-50 ${cardTable.head}`} {...cardTableRoles.head}>
+              <tr {...cardTableRoles.row}>
+                <Th {...cardTableRoles.header}>Code</Th>
+                <Th {...cardTableRoles.header}>Discount</Th>
+                <Th {...cardTableRoles.header}>Minimum order</Th>
+                <Th {...cardTableRoles.header}>Valid</Th>
+                <Th {...cardTableRoles.header}>Used</Th>
+                <Th {...cardTableRoles.header}>Status</Th>
+                <Th {...cardTableRoles.header}>
                   <span className="sr-only">Actions</span>
                 </Th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className={cardTable.body} {...cardTableRoles.body}>
               {coupons.map((coupon) => {
                 const badge = STATUS[couponStatus(coupon, now)];
                 return (
-                  <Tr key={coupon.id}>
-                    <Td>
+                  <Tr key={coupon.id} className={cardTable.row} {...cardTableRoles.row}>
+                    <Td className={cardTable.titleCell} {...cardTableRoles.cell}>
                       <div className="flex items-center gap-1">
                         <span className="rounded-md bg-gray-100 px-2 py-1 font-mono font-bold text-gray-900">
                           {coupon.code}
@@ -168,18 +172,34 @@ export default function CouponsPage() {
                         <CopyCodeButton code={coupon.code} />
                       </div>
                     </Td>
-                    <Td>{describeDiscount(coupon)}</Td>
-                    <Td className="text-gray-600">
+                    <Td className={cardTable.cell} data-label="Discount" {...cardTableRoles.cell}>
+                      {describeDiscount(coupon)}
+                    </Td>
+                    <Td
+                      className={`text-gray-600 ${cardTable.cell}`}
+                      data-label="Minimum order"
+                      {...cardTableRoles.cell}
+                    >
                       {coupon.minSubtotalMinor > 0 ? formatMoney(coupon.minSubtotalMinor) : 'None'}
                     </Td>
-                    <Td className="whitespace-nowrap text-xs text-gray-600">{validity(coupon)}</Td>
-                    <Td>
+                    <Td
+                      className={`text-xs text-gray-600 md:whitespace-nowrap ${cardTable.cell}`}
+                      data-label="Valid"
+                      {...cardTableRoles.cell}
+                    >
+                      {validity(coupon)}
+                    </Td>
+                    <Td className={cardTable.cell} data-label="Used" {...cardTableRoles.cell}>
                       <UsageMeter used={coupon.usedCount} limit={coupon.usageLimit} />
                     </Td>
-                    <Td>
+                    <Td className={cardTable.cell} data-label="Status" {...cardTableRoles.cell}>
                       <StatusBadge tone={badge.tone}>{badge.text}</StatusBadge>
                     </Td>
-                    <Td align="right" className="whitespace-nowrap max-md:sticky max-md:right-0 max-md:bg-white max-md:shadow-[-8px_0_8px_-8px_rgba(0,0,0,0.15)]">
+                    <Td
+                      align="right"
+                      className={`whitespace-nowrap ${cardTable.actionsCell}`}
+                      {...cardTableRoles.cell}
+                    >
                       <div className="flex items-center justify-end gap-1">
                         <IconAction
                           to={`/admin/coupons/${coupon.id}`}

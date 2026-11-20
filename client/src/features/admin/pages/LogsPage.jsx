@@ -1,5 +1,11 @@
-import { ChevronDown, ChevronRight } from 'lucide-react';
+import { ChevronDown, ChevronRight, History, Search } from 'lucide-react';
 import { useState } from 'react';
+
+import { focusRing } from '@/shared/design/tokens';
+import Button from '@/shared/ui/Button';
+import { Card } from '@/shared/ui/Card';
+import { Input, Select } from '@/shared/ui/Input';
+import PageHeader from '@/shared/ui/PageHeader';
 
 import QueryState from '../components/QueryState';
 import StatusBadge from '../components/StatusBadge';
@@ -13,8 +19,6 @@ import {
 } from '../lib/auditFormat';
 import { AUDIT_ACTIONS, AUDIT_TABLES } from '../services/auditLogService';
 
-const selectClass = 'rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm';
-
 const timeText = (iso) =>
   new Date(iso).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' });
 
@@ -23,7 +27,7 @@ function ChangeDetails({ entry }) {
 
   if (kind === 'none') {
     return (
-      <p className="text-xs text-gray-500">
+      <p className="text-xs text-gray-600">
         No field-level details were recorded for this {ACTION_LABELS[entry.action].toLowerCase()}{' '}
         entry.
       </p>
@@ -35,7 +39,7 @@ function ChangeDetails({ entry }) {
       <div className="overflow-x-auto">
         <table className="w-full text-left text-xs">
           <thead>
-            <tr className="text-gray-500">
+            <tr className="text-gray-600">
               <th scope="col" className="py-1 pr-4 font-semibold">
                 Field
               </th>
@@ -68,7 +72,7 @@ function ChangeDetails({ entry }) {
 
   return (
     <div className="overflow-x-auto">
-      <p className="mb-1 text-xs font-semibold text-gray-500">The record as it was</p>
+      <p className="mb-1 text-xs font-semibold text-gray-600">The record as it was</p>
       <table className="w-full text-left text-xs">
         <tbody>
           {rows.map((row) => (
@@ -88,24 +92,24 @@ function ChangeDetails({ entry }) {
 function LogEntry({ entry, open, onToggle }) {
   const panelId = `log-details-${entry.id}`;
   return (
-    <li className="px-4 py-3">
+    <li className="px-4 py-3 transition-colors duration-150 hover:bg-gray-50/60">
       <button
         type="button"
         onClick={onToggle}
         aria-expanded={open}
         aria-controls={panelId}
-        className="flex w-full cursor-pointer items-start gap-2 text-left"
+        className={`flex w-full cursor-pointer items-start gap-2 rounded-lg text-left max-md:min-h-11 ${focusRing}`}
       >
         {open ? (
-          <ChevronDown size={16} className="mt-0.5 shrink-0 text-gray-400" aria-hidden="true" />
+          <ChevronDown size={16} className="mt-0.5 shrink-0 text-gray-500" aria-hidden="true" />
         ) : (
-          <ChevronRight size={16} className="mt-0.5 shrink-0 text-gray-400" aria-hidden="true" />
+          <ChevronRight size={16} className="mt-0.5 shrink-0 text-gray-500" aria-hidden="true" />
         )}
         <span className="min-w-0 flex-1">
           <span className="block text-sm font-semibold break-words text-gray-900">
             {entry.summary}
           </span>
-          <span className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-500">
+          <span className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-600">
             <StatusBadge tone={ACTION_TONES[entry.action]}>
               {ACTION_LABELS[entry.action]}
             </StatusBadge>
@@ -159,20 +163,17 @@ export default function LogsPage() {
 
   return (
     <section className="space-y-4">
-      <div>
-        <h2 className="text-lg font-black text-gray-900">Activity log</h2>
-        <p className="text-xs text-gray-500">
-          Every change to products, categories, deal tags, coupons, banners, admin roles and orders
-          (shipping and tracking). The log is read-only: nobody can edit or delete it.
-        </p>
-      </div>
+      <PageHeader
+        title="Activity log"
+        description="Every change to products, categories, deal tags, coupons, banners, admin roles and orders (shipping and tracking). The log is read-only: nobody can edit or delete it."
+      />
 
-      <div className="flex flex-wrap items-center gap-2">
-        <select
+      <Card className="flex flex-wrap items-center gap-3 !p-3 sm:!p-4">
+        <Select
           value={table}
           onChange={(event) => setTable(event.target.value)}
           aria-label="Filter by area"
-          className={selectClass}
+          className="!w-auto"
         >
           <option value="">All areas</option>
           {AUDIT_TABLES.map((name) => (
@@ -180,12 +181,12 @@ export default function LogsPage() {
               {TABLE_LABELS[name]}
             </option>
           ))}
-        </select>
-        <select
+        </Select>
+        <Select
           value={action}
           onChange={(event) => setAction(event.target.value)}
           aria-label="Filter by action"
-          className={selectClass}
+          className="!w-auto"
         >
           <option value="">All actions</option>
           {AUDIT_ACTIONS.map((name) => (
@@ -193,41 +194,41 @@ export default function LogsPage() {
               {ACTION_LABELS[name]}
             </option>
           ))}
-        </select>
-        <form onSubmit={submitSearch} role="search" className="flex gap-2">
-          <input
-            type="search"
-            value={draft}
-            onChange={(event) => setDraft(event.target.value)}
-            placeholder="Search summary or admin email"
-            aria-label="Search the log"
-            className="w-64 max-w-full rounded-md border border-gray-300 px-3 py-1.5 text-sm"
-          />
-          <button
-            type="submit"
-            className="cursor-pointer rounded-md border border-gray-300 px-3 py-1.5 text-sm font-semibold text-gray-700 hover:bg-gray-100"
-          >
+        </Select>
+        <form onSubmit={submitSearch} role="search" className="flex min-w-0 flex-1 basis-64 gap-2">
+          <div className="min-w-0 flex-1">
+            <Input
+              type="search"
+              value={draft}
+              onChange={(event) => setDraft(event.target.value)}
+              placeholder="Search summary or admin email"
+              aria-label="Search the log"
+              leadingIcon={<Search size={16} />}
+            />
+          </div>
+          <Button type="submit" variant="secondary">
             Search
-          </button>
+          </Button>
         </form>
         {filtered && (
           <button
             type="button"
             onClick={clearFilters}
-            className="cursor-pointer text-sm font-semibold text-blue-600 underline"
+            className={`cursor-pointer rounded px-1 text-sm font-semibold text-blue-700 underline hover:text-blue-800 max-md:min-h-11 ${focusRing}`}
           >
             Clear filters
           </button>
         )}
-      </div>
+      </Card>
 
-      <div className="rounded-xl border border-gray-200 bg-white shadow-xs">
+      <Card flush>
         <QueryState
           query={query}
           isEmpty={entries.length === 0}
           emptyText={
             filtered ? 'No log entries match these filters.' : 'No changes have been logged yet.'
           }
+          emptyIcon={History}
           label="activity log"
         >
           <ul className="divide-y divide-gray-100">
@@ -242,25 +243,24 @@ export default function LogsPage() {
           </ul>
           <div className="border-t border-gray-100 p-3 text-center">
             {query.hasNextPage ? (
-              <button
-                type="button"
+              <Button
+                variant="secondary"
                 onClick={() => query.fetchNextPage()}
                 disabled={query.isFetchingNextPage}
-                className="cursor-pointer rounded-md border border-gray-300 px-4 py-1.5 text-sm font-semibold text-gray-700 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {query.isFetchingNextPage ? 'Loading...' : 'Load more'}
-              </button>
+              </Button>
             ) : (
-              <p className="text-xs text-gray-400">End of the log</p>
+              <p className="text-xs text-gray-500">End of the log</p>
             )}
             {query.isFetchNextPageError && (
-              <p role="alert" className="mt-2 text-xs text-red-600">
+              <p role="alert" className="mt-2 text-xs text-red-700">
                 We couldn&apos;t load more entries. Try again.
               </p>
             )}
           </div>
         </QueryState>
-      </div>
+      </Card>
     </section>
   );
 }
