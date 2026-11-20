@@ -1,6 +1,8 @@
 import { ArrowLeft } from 'lucide-react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 
+import PageHeader from '@/shared/ui/PageHeader';
+
 import CouponForm from '../components/CouponForm';
 import QueryState from '../components/QueryState';
 import { useAdminCoupon } from '../hooks/useAdminData';
@@ -36,7 +38,7 @@ export default function CouponEditPage() {
         >
           <ArrowLeft size={14} aria-hidden="true" /> Back to coupons
         </Link>
-        <h2 className="text-lg font-black text-gray-900">{isNew ? 'Add coupon' : 'Edit coupon'}</h2>
+        <PageHeader title={isNew ? 'Add coupon' : 'Edit coupon'} as="h2" />
       </div>
 
       {notFound ? (

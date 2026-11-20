@@ -2,6 +2,7 @@ import { ArrowLeft, ArrowRight, Star, Trash2, UploadCloud } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
 import ProductImage from '@/features/catalog/components/ProductImage';
+import { focusRing } from '@/shared/design/tokens';
 
 import { moveItem } from '../lib/moveItem';
 import { ALLOWED_IMAGE_TYPES, validateImageFile } from '../lib/uploadRules';
@@ -169,11 +170,11 @@ export default function ImageUploader({
           type="button"
           disabled={!canAdd}
           onClick={() => inputRef.current?.click()}
-          className="cursor-pointer rounded-md border border-gray-300 bg-white px-3 py-1.5 text-xs font-bold text-gray-700 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
+          className={`cursor-pointer rounded-md border border-gray-300 bg-white px-3 py-1.5 text-xs font-bold text-gray-700 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50 max-md:min-h-11 max-md:px-4 max-md:text-sm ${focusRing}`}
         >
           Choose images
         </button>
-        <p className="text-[11px] text-gray-400">JPG, PNG or WebP, up to 5 MB each.</p>
+        <p className="text-xs text-gray-500">JPG, PNG or WebP, up to 5 MB each.</p>
         <input
           ref={inputRef}
           type="file"
@@ -204,18 +205,18 @@ export default function ImageUploader({
               <div className="flex items-center justify-between gap-2">
                 <span className="truncate text-gray-700">{job.name}</span>
                 {job.status === 'failed' ? (
-                  <span className="flex shrink-0 gap-2">
+                  <span className="flex shrink-0 items-center gap-2">
                     <button
                       type="button"
                       onClick={() => retry(job)}
-                      className="cursor-pointer font-bold text-blue-600 underline"
+                      className={`cursor-pointer font-bold text-blue-600 underline max-md:inline-flex max-md:min-h-11 max-md:items-center ${focusRing}`}
                     >
                       Retry
                     </button>
                     <button
                       type="button"
                       onClick={() => dismiss(job.id)}
-                      className="cursor-pointer font-bold text-gray-500 underline"
+                      className={`cursor-pointer font-bold text-gray-500 underline max-md:inline-flex max-md:min-h-11 max-md:items-center ${focusRing}`}
                     >
                       Dismiss
                     </button>
@@ -276,7 +277,7 @@ export default function ImageUploader({
                   className="aspect-square w-full rounded object-contain"
                 />
                 {index === 0 && (
-                  <span className="absolute top-1 left-1 rounded bg-blue-600 px-1.5 py-0.5 text-[10px] font-bold text-white">
+                  <span className="absolute top-1 left-1 rounded bg-blue-600 px-2 py-0.5 text-xs font-bold text-white">
                     Main
                   </span>
                 )}
@@ -291,32 +292,32 @@ export default function ImageUploader({
                   onChange={(event) => updateAlt(index, event.target.value)}
                   aria-label={`Alt text for image ${index + 1}`}
                   placeholder="Describe the image"
-                  className="mt-2 w-full rounded border border-gray-300 px-2 py-1 text-xs"
+                  className={`mt-2 w-full rounded border border-gray-300 px-2 py-1 text-xs max-md:min-h-10 ${focusRing}`}
                 />
               )}
 
-              <div className="mt-2 flex items-center justify-between">
-                <span className="flex gap-1">
+              <div className="mt-2 flex flex-wrap items-center justify-between gap-1.5">
+                <span className="flex flex-wrap gap-1">
                   <IconButton
                     label={`Move image ${index + 1} left`}
                     disabled={disabled || index === 0}
                     onClick={() => commit(moveItem(value, index, index - 1))}
                   >
-                    <ArrowLeft size={14} />
+                    <ArrowLeft size={14} aria-hidden="true" />
                   </IconButton>
                   <IconButton
                     label={`Move image ${index + 1} right`}
                     disabled={disabled || index === value.length - 1}
                     onClick={() => commit(moveItem(value, index, index + 1))}
                   >
-                    <ArrowRight size={14} />
+                    <ArrowRight size={14} aria-hidden="true" />
                   </IconButton>
                   <IconButton
                     label={`Make image ${index + 1} the main image`}
                     disabled={disabled || index === 0}
                     onClick={() => commit(moveItem(value, index, 0))}
                   >
-                    <Star size={14} />
+                    <Star size={14} aria-hidden="true" />
                   </IconButton>
                 </span>
                 <IconButton
@@ -324,7 +325,7 @@ export default function ImageUploader({
                   disabled={disabled}
                   onClick={() => commit(value.filter((_, position) => position !== index))}
                 >
-                  <Trash2 size={14} />
+                  <Trash2 size={14} aria-hidden="true" />
                 </IconButton>
               </div>
             </li>
@@ -343,7 +344,7 @@ function IconButton({ label, disabled, onClick, children }) {
       title={label}
       disabled={disabled}
       onClick={onClick}
-      className="cursor-pointer rounded border border-gray-200 p-1 text-gray-600 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-40"
+      className={`inline-flex cursor-pointer items-center justify-center rounded-md border border-gray-200 p-1 text-gray-600 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-40 max-md:h-11 max-md:w-11 max-md:min-h-11 max-md:min-w-11 ${focusRing}`}
     >
       {children}
     </button>

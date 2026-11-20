@@ -1,6 +1,8 @@
 import { X } from 'lucide-react';
 import { useState } from 'react';
 
+import { focusRing } from '@/shared/design/tokens';
+
 import { inputClass } from './FormField';
 
 /**
@@ -56,9 +58,9 @@ export default function TagInput({ id, value, onChange, placeholder, describedBy
                 type="button"
                 aria-label={`Remove ${tag}`}
                 onClick={() => onChange(value.filter((item) => item !== tag))}
-                className="cursor-pointer text-gray-400 hover:text-red-600"
+                className={`cursor-pointer rounded-full p-0.5 text-gray-500 hover:bg-gray-200 hover:text-red-600 max-md:inline-flex max-md:min-h-11 max-md:min-w-11 max-md:items-center max-md:justify-center ${focusRing}`}
               >
-                <X size={12} />
+                <X size={14} aria-hidden="true" />
               </button>
             </li>
           ))}

@@ -1,6 +1,8 @@
 import { ArrowLeft } from 'lucide-react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 
+import PageHeader from '@/shared/ui/PageHeader';
+
 import BannerForm from '../components/BannerForm';
 import QueryState from '../components/QueryState';
 import { useAdminBanner } from '../hooks/useAdminData';
@@ -42,9 +44,10 @@ export default function BannerEditPage() {
         >
           <ArrowLeft size={14} aria-hidden="true" /> Back to banners
         </Link>
-        <h2 className="text-lg font-black text-gray-900">
-          {isNew ? 'Add' : 'Edit'} {kind === 'announcement' ? 'announcement' : 'hero slide'}
-        </h2>
+        <PageHeader
+          title={`${isNew ? 'Add' : 'Edit'} ${kind === 'announcement' ? 'announcement' : 'hero slide'}`}
+          as="h2"
+        />
       </div>
 
       {notFound ? (

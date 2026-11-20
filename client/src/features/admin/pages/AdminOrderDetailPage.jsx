@@ -4,6 +4,7 @@ import { Link, useParams } from 'react-router-dom';
 
 import { buildTimeline } from '@/features/orders/lib/orderStatus';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
+import { focusRing } from '@/shared/design/tokens';
 import { formatDateTime } from '@/shared/lib/formatDate';
 import { formatMoney } from '@/shared/lib/formatMoney';
 
@@ -55,12 +56,12 @@ function Timeline({ order }) {
             )}
           </span>
           <div>
-            <p className={step.done ? 'font-bold text-gray-900' : 'text-gray-400'}>
+            <p className={step.done ? 'font-bold text-gray-900' : 'text-gray-500'}>
               {step.label}
               <span className="sr-only">{step.done ? ' (done)' : ' (not yet)'}</span>
             </p>
             {step.done && step.at && (
-              <p className="text-[11px] text-gray-500">{formatDateTime(step.at)}</p>
+              <p className="text-xs text-gray-500">{formatDateTime(step.at)}</p>
             )}
           </div>
         </li>
@@ -92,7 +93,7 @@ function CopyButton({ value, label }) {
         type="button"
         onClick={copy}
         aria-label={`Copy ${label}`}
-        className="inline-flex cursor-pointer items-center gap-1 rounded-md border border-gray-300 px-2 py-1 text-xs font-semibold text-gray-700 hover:bg-gray-100"
+        className={`inline-flex cursor-pointer items-center gap-1 rounded-md border border-gray-300 px-2 py-1 text-xs font-semibold text-gray-700 hover:bg-gray-100 max-md:min-h-11 ${focusRing}`}
       >
         <Copy size={12} aria-hidden="true" /> Copy
       </button>
@@ -109,7 +110,7 @@ function CopyButton({ value, label }) {
 function Field({ label, children }) {
   return (
     <div>
-      <dt className="text-[11px] font-semibold text-gray-500">{label}</dt>
+      <dt className="text-xs font-semibold text-gray-500">{label}</dt>
       <dd className="text-sm break-words text-gray-900">
         {children || <span className="text-gray-400">—</span>}
       </dd>
@@ -165,7 +166,7 @@ function TrackingForm({ order, update, onSaved }) {
         <button
           type="submit"
           disabled={update.isPending || Boolean(problem) || unchanged}
-          className="cursor-pointer rounded-md bg-blue-600 px-3 py-1.5 text-sm font-bold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+          className={`cursor-pointer rounded-md bg-blue-600 px-3 py-1.5 text-sm font-bold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50 max-md:min-h-11 ${focusRing}`}
         >
           {update.isPending ? 'Saving...' : 'Save tracking'}
         </button>
@@ -210,7 +211,7 @@ export default function AdminOrderDetailPage() {
     return (
       <Shell>
         <div className={`${cardClass} text-center`}>
-          <h2 className="text-base font-black text-gray-900">We couldn&apos;t find that order</h2>
+          <h2 className="text-base font-semibold text-gray-900">We couldn&apos;t find that order</h2>
           <p className="mt-1 text-xs text-gray-500">
             It may have been removed or the link is wrong.
           </p>
@@ -295,7 +296,7 @@ export default function AdminOrderDetailPage() {
         >
           <TriangleAlert size={18} className="mt-0.5 shrink-0" aria-hidden="true" />
           <div>
-            <p className="font-black">Needs refund</p>
+            <p className="font-bold">Needs refund</p>
             <p>{issue}</p>
           </div>
         </div>
@@ -303,7 +304,7 @@ export default function AdminOrderDetailPage() {
 
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div>
-          <h2 className="text-lg font-black text-gray-900">Order {order.orderNumber}</h2>
+          <h2 className="text-lg font-semibold text-gray-900">Order {order.orderNumber}</h2>
           <p className="text-xs text-gray-500">Placed {formatDateTime(order.createdAt)}</p>
         </div>
         <div className="flex items-center gap-2">
@@ -335,7 +336,7 @@ export default function AdminOrderDetailPage() {
                   setNotice('');
                   setDialog(step.status === 'shipped' ? 'ship' : 'deliver');
                 }}
-                className="cursor-pointer rounded-md bg-blue-600 px-4 py-2 text-sm font-bold text-white hover:bg-blue-700"
+                className={`cursor-pointer rounded-md bg-blue-600 px-4 py-2 text-sm font-bold text-white hover:bg-blue-700 max-md:min-h-11 ${focusRing}`}
               >
                 {step.button}
               </button>
@@ -399,7 +400,7 @@ export default function AdminOrderDetailPage() {
                 <dt>Delivery</dt>
                 <dd>{formatMoney(order.deliveryFeeMinor, order.currency)}</dd>
               </div>
-              <div className="flex justify-between font-black text-gray-900">
+              <div className="flex justify-between font-bold text-gray-900">
                 <dt>Total</dt>
                 <dd>{formatMoney(order.totalMinor, order.currency)}</dd>
               </div>
@@ -430,7 +431,7 @@ export default function AdminOrderDetailPage() {
             <dl className="space-y-2">
               <Field label="Paid at">{formatDateTime(order.paidAt)}</Field>
               <div>
-                <dt className="text-[11px] font-semibold text-gray-500">
+                <dt className="text-xs font-semibold text-gray-500">
                   Stripe Payment Intent (for refunds)
                 </dt>
                 <dd className="mt-1 space-y-1.5">

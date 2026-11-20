@@ -1,6 +1,8 @@
 import { ArrowLeft } from 'lucide-react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 
+import PageHeader from '@/shared/ui/PageHeader';
+
 import ProductForm from '../components/ProductForm';
 import QueryState from '../components/QueryState';
 import { useAdminCategories, useAdminDealTags, useAdminProduct } from '../hooks/useAdminData';
@@ -46,9 +48,7 @@ export default function ProductEditPage() {
         >
           <ArrowLeft size={14} aria-hidden="true" /> Back to products
         </Link>
-        <h2 className="text-lg font-black text-gray-900">
-          {isNew ? 'Add product' : 'Edit product'}
-        </h2>
+        <PageHeader title={isNew ? 'Add product' : 'Edit product'} as="h2" />
       </div>
 
       {notFound ? (

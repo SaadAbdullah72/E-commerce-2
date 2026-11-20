@@ -6,6 +6,7 @@ import { Stars } from '@/features/reviews/components/Stars';
 import { formatDuration, largeUrl, thumbnailUrl } from '@/features/reviews/lib/mediaUrls';
 import { formatBytes } from '@/features/reviews/lib/reviewRules';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
+import { focusRing } from '@/shared/design/tokens';
 import { formatDateTime } from '@/shared/lib/formatDate';
 
 import { isUuid } from '../../checkout/services/checkoutService';
@@ -37,7 +38,7 @@ function Shell({ children }) {
 function Field({ label, children }) {
   return (
     <div>
-      <dt className="text-[11px] font-semibold text-gray-500">{label}</dt>
+      <dt className="text-xs font-semibold text-gray-500">{label}</dt>
       <dd className="text-sm break-words text-gray-900">
         {children || <span className="text-gray-400">—</span>}
       </dd>
@@ -64,7 +65,7 @@ function History({ reviewId }) {
           {audit.data.map((entry) => (
             <li key={entry.id} className="text-xs">
               <p className="font-semibold text-gray-900">{entry.summary}</p>
-              <p className="text-[11px] text-gray-500">
+              <p className="text-xs text-gray-500">
                 {entry.actorEmail || 'Database'} · {formatDateTime(entry.at)}
               </p>
             </li>
@@ -103,7 +104,7 @@ function MediaItem({ item, number, onRemove }) {
           />
         </a>
       )}
-      <div className="flex items-center justify-between gap-2 text-[11px] text-gray-500">
+      <div className="flex items-center justify-between gap-2 text-xs text-gray-500">
         <span>
           {isVideo ? 'Video' : `Photo ${number}`} · {details}
         </span>
@@ -111,7 +112,7 @@ function MediaItem({ item, number, onRemove }) {
           type="button"
           onClick={onRemove}
           aria-label={isVideo ? 'Remove video' : `Remove photo ${number}`}
-          className="cursor-pointer rounded-md border border-red-200 px-2 py-0.5 text-[11px] font-bold text-red-600 hover:bg-red-50"
+          className={`cursor-pointer rounded-md border border-red-200 px-2 py-0.5 text-xs font-bold text-red-600 hover:bg-red-50 max-md:min-h-11 max-md:flex max-md:items-center ${focusRing}`}
         >
           Remove
         </button>
@@ -144,7 +145,7 @@ export default function AdminReviewDetailPage() {
     return (
       <Shell>
         <div className={`${cardClass} text-center`}>
-          <h2 className="text-base font-black text-gray-900">We couldn&apos;t find that review</h2>
+          <h2 className="text-base font-semibold text-gray-900">We couldn&apos;t find that review</h2>
           <p className="mt-1 text-xs text-gray-500">
             It may have been deleted or the link is wrong.
           </p>
@@ -261,7 +262,7 @@ export default function AdminReviewDetailPage() {
 
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div>
-          <h2 className="text-lg font-black text-gray-900">Review by {review.authorName}</h2>
+          <h2 className="text-lg font-semibold text-gray-900">Review by {review.authorName}</h2>
           <p className="text-xs text-gray-500">
             On{' '}
             {review.productSlug ? (
@@ -283,7 +284,7 @@ export default function AdminReviewDetailPage() {
             <div className="flex items-center gap-2">
               <Stars rating={review.rating} size={16} />
               {review.verified && (
-                <span className="text-[11px] font-bold text-green-700">Verified Purchase</span>
+                <span className="text-xs font-bold text-green-700">Verified Purchase</span>
               )}
             </div>
             {review.title && <h3 className="text-sm font-bold text-gray-900">{review.title}</h3>}
@@ -325,7 +326,7 @@ export default function AdminReviewDetailPage() {
                 type="button"
                 disabled={busy || review.status === 'approved'}
                 onClick={() => setDialog({ kind: 'approved' })}
-                className="cursor-pointer rounded-md bg-green-600 px-3 py-1.5 text-sm font-bold text-white hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50"
+                className={`cursor-pointer rounded-md bg-green-600 px-3 py-1.5 text-sm font-bold text-white hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50 max-md:min-h-11 ${focusRing}`}
               >
                 Approve
               </button>
@@ -333,7 +334,7 @@ export default function AdminReviewDetailPage() {
                 type="button"
                 disabled={busy || review.status === 'rejected'}
                 onClick={() => setDialog({ kind: 'rejected' })}
-                className="cursor-pointer rounded-md bg-amber-600 px-3 py-1.5 text-sm font-bold text-white hover:bg-amber-700 disabled:cursor-not-allowed disabled:opacity-50"
+                className={`cursor-pointer rounded-md bg-amber-600 px-3 py-1.5 text-sm font-bold text-white hover:bg-amber-700 disabled:cursor-not-allowed disabled:opacity-50 max-md:min-h-11 ${focusRing}`}
               >
                 Reject
               </button>
@@ -341,13 +342,13 @@ export default function AdminReviewDetailPage() {
                 type="button"
                 disabled={busy}
                 onClick={() => setDialog({ kind: 'delete' })}
-                className="cursor-pointer rounded-md border border-red-300 px-3 py-1.5 text-sm font-bold text-red-600 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
+                className={`cursor-pointer rounded-md border border-red-300 px-3 py-1.5 text-sm font-bold text-red-600 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50 max-md:min-h-11 ${focusRing}`}
               >
                 Delete
               </button>
             </div>
             {review.moderatedAt && (
-              <p className="text-[11px] text-gray-500">
+              <p className="text-xs text-gray-500">
                 Last decision {formatDateTime(review.moderatedAt)}
               </p>
             )}

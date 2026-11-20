@@ -1,6 +1,8 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm, useWatch } from 'react-hook-form';
 
+import { buttonClass } from '@/shared/ui/buttonStyles';
+
 import { couponSchema, EMPTY_COUPON_VALUES, toCouponRow } from '../lib/couponSchema';
 import { describedBy } from '../lib/formHelpers';
 import FormField, { inputClass } from './FormField';
@@ -238,24 +240,24 @@ export default function CouponForm({
         <label className="flex items-center gap-2 text-sm text-gray-700">
           <input type="checkbox" {...register('isActive')} /> Active (can be used)
         </label>
-        <p className="text-[11px] text-gray-500">
+        <p className="text-xs text-gray-500">
           Customers will be able to enter coupons once checkout is built. Until then, coupons are
           saved here but cannot be redeemed.
         </p>
       </section>
 
-      <div className="flex justify-end gap-2">
+      <div className="flex flex-wrap justify-end gap-2">
         <button
           type="button"
           onClick={onCancel}
-          className="cursor-pointer rounded-md border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-100"
+          className={buttonClass({ variant: 'secondary' })}
         >
           Cancel
         </button>
         <button
           type="submit"
           disabled={isSaving}
-          className="cursor-pointer rounded-md bg-blue-600 px-4 py-2 text-sm font-bold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+          className={buttonClass({ variant: 'primary' })}
         >
           {isSaving ? 'Saving...' : 'Save coupon'}
         </button>

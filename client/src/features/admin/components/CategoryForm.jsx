@@ -2,6 +2,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 
+import { buttonClass } from '@/shared/ui/buttonStyles';
+
 import { categorySchema, EMPTY_CATEGORY_VALUES, toCategoryRow } from '../lib/categorySchema';
 import { describedBy } from '../lib/formHelpers';
 import { slugify } from '../lib/slugify';
@@ -115,18 +117,18 @@ export default function CategoryForm({
         <input type="checkbox" {...register('isActive')} /> Visible in the shop (active)
       </label>
 
-      <div className="flex justify-end gap-2">
+      <div className="flex flex-wrap justify-end gap-2">
         <button
           type="button"
           onClick={onCancel}
-          className="cursor-pointer rounded-md border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-100"
+          className={buttonClass({ variant: 'secondary' })}
         >
           Cancel
         </button>
         <button
           type="submit"
           disabled={isSaving || isUploading}
-          className="cursor-pointer rounded-md bg-blue-600 px-4 py-2 text-sm font-bold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+          className={buttonClass({ variant: 'primary' })}
         >
           {isSaving ? 'Saving...' : isUploading ? 'Uploading icon...' : 'Save category'}
         </button>

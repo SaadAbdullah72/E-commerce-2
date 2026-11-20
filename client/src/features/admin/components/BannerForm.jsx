@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 
 import { BANNER_THEMES } from '@/features/banners/lib/themes';
+import { buttonClass } from '@/shared/ui/buttonStyles';
 
 import { bannerSchema, EMPTY_BANNER_VALUES, toBannerRow } from '../lib/bannerSchema';
 import { describedBy } from '../lib/formHelpers';
@@ -186,7 +187,7 @@ export default function BannerForm({
               )}
             />
             {errors.image && (
-              <p role="alert" className="mt-1 text-[11px] font-medium text-red-600">
+              <p role="alert" className="mt-1 text-xs font-medium text-red-600">
                 {errors.image.message ?? 'The picture is not valid. Remove it and upload it again.'}
               </p>
             )}
@@ -228,18 +229,18 @@ export default function BannerForm({
         </label>
       </section>
 
-      <div className="flex justify-end gap-2">
+      <div className="flex flex-wrap justify-end gap-2">
         <button
           type="button"
           onClick={onCancel}
-          className="cursor-pointer rounded-md border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-100"
+          className={buttonClass({ variant: 'secondary' })}
         >
           Cancel
         </button>
         <button
           type="submit"
           disabled={isSaving || isUploading}
-          className="cursor-pointer rounded-md bg-blue-600 px-4 py-2 text-sm font-bold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+          className={buttonClass({ variant: 'primary' })}
         >
           {isSaving ? 'Saving...' : isUploading ? 'Uploading picture...' : 'Save'}
         </button>

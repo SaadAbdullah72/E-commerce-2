@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react';
 import { Controller, useFieldArray, useForm, useWatch } from 'react-hook-form';
 
 import { getDiscountPercent } from '@/features/catalog/lib/mapProduct';
+import { focusRing } from '@/shared/design/tokens';
+import { buttonClass } from '@/shared/ui/buttonStyles';
 
 import { describedBy } from '../lib/formHelpers';
 import { parseMoneyToMinor } from '../lib/money';
@@ -230,12 +232,12 @@ export default function ProductForm({
                     {...register(`colors.${index}.name`)}
                   />
                   {errors.colors?.[index]?.name && (
-                    <p role="alert" className="mt-1 text-[11px] font-medium text-red-600">
+                    <p role="alert" className="mt-1 text-xs font-medium text-red-600">
                       {errors.colors[index].name.message}
                     </p>
                   )}
                   {errors.colors?.[index]?.hex && (
-                    <p role="alert" className="mt-1 text-[11px] font-medium text-red-600">
+                    <p role="alert" className="mt-1 text-xs font-medium text-red-600">
                       {errors.colors[index].hex.message}
                     </p>
                   )}
@@ -250,15 +252,15 @@ export default function ProductForm({
                   type="button"
                   aria-label={`Remove colour ${index + 1}`}
                   onClick={() => colors.remove(index)}
-                  className="mt-2 cursor-pointer text-gray-400 hover:text-red-600"
+                  className={`inline-flex cursor-pointer items-center justify-center rounded p-0.5 text-gray-500 hover:text-red-600 max-md:min-h-11 max-md:min-w-11 ${focusRing}`}
                 >
-                  <Trash2 size={16} />
+                  <Trash2 size={16} aria-hidden="true" />
                 </button>
               </li>
             ))}
           </ul>
           {errors.colors?.message && (
-            <p role="alert" className="mt-1 text-[11px] font-medium text-red-600">
+            <p role="alert" className="mt-1 text-xs font-medium text-red-600">
               {errors.colors.message}
             </p>
           )}
@@ -294,7 +296,7 @@ export default function ProductForm({
           )}
         />
         {errors.images && (
-          <p role="alert" className="text-[11px] font-medium text-red-600">
+          <p role="alert" className="text-xs font-medium text-red-600">
             {errors.images.message ??
               'One of the images is not valid. Remove it and upload it again.'}
           </p>
@@ -336,18 +338,18 @@ export default function ProductForm({
         </label>
       </section>
 
-      <div className="flex justify-end gap-2">
+      <div className="flex flex-wrap justify-end gap-2">
         <button
           type="button"
           onClick={onCancel}
-          className="cursor-pointer rounded-md border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-100"
+          className={buttonClass({ variant: 'secondary' })}
         >
           Cancel
         </button>
         <button
           type="submit"
           disabled={isSaving || isUploading}
-          className="cursor-pointer rounded-md bg-blue-600 px-4 py-2 text-sm font-bold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+          className={buttonClass({ variant: 'primary' })}
         >
           {isSaving ? 'Saving...' : isUploading ? 'Uploading images...' : 'Save product'}
         </button>
