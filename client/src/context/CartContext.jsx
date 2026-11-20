@@ -100,12 +100,6 @@ export function CartProvider({ children }) {
 
   const clearCart = () => setItems([]);
 
-  /** Remove only what was just bought (ticked and available) after a successful order. */
-  const removeSelectedItems = () => {
-    const bought = new Set(purchasableSelected(lines).map((line) => line.key));
-    setItems((previous) => previous.filter((item) => !bought.has(lineKey(item.productId, item.size, item.color))));
-  };
-
   /**
    * Remove exactly the lines of a paid order (matched by product, size and colour), however the
    * cart's ticks have changed since. Used by the order success page.
@@ -135,7 +129,6 @@ export function CartProvider({ children }) {
     updateQuantity,
     acknowledgePriceChange,
     clearCart,
-    removeSelectedItems,
     removePurchasedLines,
     totalItems: items.reduce((sum, item) => sum + item.quantity, 0),
     selectedItemsCount: countUnits(selectedCart),
