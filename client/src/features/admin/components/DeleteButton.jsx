@@ -1,5 +1,7 @@
 import { Trash2 } from 'lucide-react';
 
+import { focusRing } from '@/shared/design/tokens';
+
 /**
  * The red trash icon that sits next to Deactivate / Pause.
  *
@@ -17,9 +19,9 @@ export default function DeleteButton({ label, onClick, disabledReason = '' }) {
       disabled={disabled}
       title={disabled ? disabledReason : 'Delete permanently'}
       aria-label={`Delete ${label}`}
-      className="ml-3 inline-flex cursor-pointer items-center align-middle text-red-600 hover:text-red-800 disabled:cursor-not-allowed disabled:text-gray-300"
+      className={`inline-flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-lg text-red-700 transition-colors duration-150 hover:bg-red-50 disabled:cursor-not-allowed disabled:text-gray-400 disabled:hover:bg-transparent max-md:h-11 max-md:w-11 ${focusRing}`}
     >
-      <Trash2 size={14} aria-hidden="true" />
+      <Trash2 size={16} aria-hidden="true" />
     </button>
   );
 }

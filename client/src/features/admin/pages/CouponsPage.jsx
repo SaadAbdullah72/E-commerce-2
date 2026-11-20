@@ -1,13 +1,24 @@
+import { Pause, Pencil, Play, Plus, Search, Ticket } from 'lucide-react';
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
 import { formatMoney } from '@/shared/lib/formatMoney';
+import { buttonClass } from '@/shared/ui/buttonStyles';
+import { Card } from '@/shared/ui/Card';
+import { Input, Select } from '@/shared/ui/Input';
+import PageHeader from '@/shared/ui/PageHeader';
+import { Td, Th, Tr } from '@/shared/ui/Table';
 
+import CopyCodeButton from '../components/CopyCodeButton';
+import CouponStats from '../components/coupons/CouponStats';
 import DeleteButton from '../components/DeleteButton';
 import DeleteConfirm from '../components/DeleteConfirm';
+import IconAction from '../components/IconAction';
+import NoticeBanner from '../components/NoticeBanner';
 import QueryState from '../components/QueryState';
 import StatusBadge from '../components/StatusBadge';
+import UsageMeter from '../components/UsageMeter';
 import { useAdminCoupons } from '../hooks/useAdminData';
 import { useDeleteCoupon, useSetCouponActive } from '../hooks/useAdminMutations';
 import { couponStatus, describeDiscount } from '../lib/couponSchema';
@@ -73,144 +84,141 @@ export default function CouponsPage() {
     });
   };
 
+  const addCoupon = (
+    <Link to="/admin/coupons/new" className={buttonClass()}>
+      <Plus size={16} aria-hidden="true" />
+      Add coupon
+    </Link>
+  );
+
   return (
     <section className="space-y-4">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h2 className="text-lg font-black text-gray-900">Coupons</h2>
-          <p className="text-xs text-gray-500">
-            A used coupon can only be paused; an unused one can be deleted. Customers can use
-            coupons once checkout is built.
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <input
+      <PageHeader
+        title="Coupons"
+        description="A used coupon can only be paused; an unused one can be deleted. Customers can use coupons once checkout is built."
+        action={addCoupon}
+      />
+
+      {query.data?.length > 0 && <CouponStats coupons={query.data} now={now} />}
+
+      <Card className="flex flex-wrap items-center gap-3 !p-3 sm:!p-4">
+        <div className="min-w-0 flex-1 basis-64">
+          <Input
             type="search"
             value={search}
             onChange={(event) => setSearch(event.target.value)}
             placeholder="Search codes"
             aria-label="Search coupons"
-            className="rounded-md border border-gray-300 px-3 py-1.5 text-sm"
+            leadingIcon={<Search size={16} />}
           />
-          <select
-            value={status}
-            onChange={(event) => setStatus(event.target.value)}
-            aria-label="Filter by status"
-            className="rounded-md border border-gray-300 px-2 py-1.5 text-sm"
-          >
-            <option value="all">All</option>
-            {Object.entries(STATUS).map(([key, option]) => (
-              <option key={key} value={key}>
-                {option.text}
-              </option>
-            ))}
-          </select>
-          <Link
-            to="/admin/coupons/new"
-            className="rounded-md bg-blue-600 px-3 py-1.5 text-sm font-bold text-white hover:bg-blue-700"
-          >
-            Add coupon
-          </Link>
         </div>
-      </div>
-
-      {notice && (
-        <p
-          role="status"
-          className="flex items-center justify-between rounded-md border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-800"
+        <Select
+          value={status}
+          onChange={(event) => setStatus(event.target.value)}
+          aria-label="Filter by status"
+          className="!w-auto"
         >
-          {notice}
-          <button
-            type="button"
-            onClick={() => setNotice('')}
-            className="cursor-pointer text-xs font-bold underline"
-          >
-            Dismiss
-          </button>
-        </p>
-      )}
+          <option value="all">All</option>
+          {Object.entries(STATUS).map(([key, option]) => (
+            <option key={key} value={key}>
+              {option.text}
+            </option>
+          ))}
+        </Select>
+      </Card>
 
-      <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white shadow-xs">
+      {notice && <NoticeBanner onDismiss={() => setNotice('')}>{notice}</NoticeBanner>}
+
+      <Card flush className="relative overflow-x-auto">
         <QueryState
           query={query}
           label="coupons"
           isEmpty={coupons.length === 0}
+          emptyIcon={Ticket}
           emptyText={
             query.data?.length ? 'No coupons match your filters.' : 'There are no coupons yet.'
           }
+          emptyAction={query.data?.length ? undefined : addCoupon}
         >
           <table className="w-full min-w-200 text-left text-sm">
-            <thead className="bg-gray-50 text-xs text-gray-500">
+            <caption className="sr-only">Coupons</caption>
+            <thead className="bg-gray-50">
               <tr>
-                <th className="px-4 py-2 font-semibold">Code</th>
-                <th className="px-4 py-2 font-semibold">Discount</th>
-                <th className="px-4 py-2 font-semibold">Minimum order</th>
-                <th className="px-4 py-2 font-semibold">Valid</th>
-                <th className="px-4 py-2 font-semibold">Used</th>
-                <th className="px-4 py-2 font-semibold">Status</th>
-                <th className="px-4 py-2 font-semibold">
+                <Th>Code</Th>
+                <Th>Discount</Th>
+                <Th>Minimum order</Th>
+                <Th>Valid</Th>
+                <Th>Used</Th>
+                <Th>Status</Th>
+                <Th className="max-md:sticky max-md:right-0 max-md:bg-gray-50">
                   <span className="sr-only">Actions</span>
-                </th>
+                </Th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody>
               {coupons.map((coupon) => {
                 const badge = STATUS[couponStatus(coupon, now)];
                 return (
-                  <tr key={coupon.id}>
-                    <td className="px-4 py-2 font-mono font-bold text-gray-900">{coupon.code}</td>
-                    <td className="px-4 py-2 text-gray-700">{describeDiscount(coupon)}</td>
-                    <td className="px-4 py-2 text-gray-600">
+                  <Tr key={coupon.id}>
+                    <Td>
+                      <div className="flex items-center gap-1">
+                        <span className="rounded-md bg-gray-100 px-2 py-1 font-mono font-bold text-gray-900">
+                          {coupon.code}
+                        </span>
+                        <CopyCodeButton code={coupon.code} />
+                      </div>
+                    </Td>
+                    <Td>{describeDiscount(coupon)}</Td>
+                    <Td className="text-gray-600">
                       {coupon.minSubtotalMinor > 0 ? formatMoney(coupon.minSubtotalMinor) : 'None'}
-                    </td>
-                    <td className="px-4 py-2 text-xs text-gray-600">{validity(coupon)}</td>
-                    <td className="px-4 py-2 text-gray-600">
-                      {coupon.usedCount} / {coupon.usageLimit ?? 'unlimited'}
-                    </td>
-                    <td className="px-4 py-2">
+                    </Td>
+                    <Td className="whitespace-nowrap text-xs text-gray-600">{validity(coupon)}</Td>
+                    <Td>
+                      <UsageMeter used={coupon.usedCount} limit={coupon.usageLimit} />
+                    </Td>
+                    <Td>
                       <StatusBadge tone={badge.tone}>{badge.text}</StatusBadge>
-                    </td>
-                    <td className="px-4 py-2 text-right whitespace-nowrap">
-                      <Link
-                        to={`/admin/coupons/${coupon.id}`}
-                        aria-label={`Edit ${coupon.code}`}
-                        className="mr-3 text-xs font-bold text-blue-600 hover:underline"
-                      >
-                        Edit
-                      </Link>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setActive.reset();
-                          setPending(coupon);
-                        }}
-                        aria-label={`${coupon.isActive ? 'Pause' : 'Resume'} ${coupon.code}`}
-                        className={`cursor-pointer text-xs font-bold hover:underline ${
-                          coupon.isActive ? 'text-red-600' : 'text-green-700'
-                        }`}
-                      >
-                        {coupon.isActive ? 'Pause' : 'Resume'}
-                      </button>
-                      <DeleteButton
-                        label={coupon.code}
-                        disabledReason={
-                          coupon.usedCount > 0
-                            ? 'Used coupons cannot be deleted. Pause it instead.'
-                            : ''
-                        }
-                        onClick={() => {
-                          remove.reset();
-                          setDeleting(coupon);
-                        }}
-                      />
-                    </td>
-                  </tr>
+                    </Td>
+                    <Td align="right" className="whitespace-nowrap max-md:sticky max-md:right-0 max-md:bg-white max-md:shadow-[-8px_0_8px_-8px_rgba(0,0,0,0.15)]">
+                      <div className="flex items-center justify-end gap-1">
+                        <IconAction
+                          to={`/admin/coupons/${coupon.id}`}
+                          label={`Edit ${coupon.code}`}
+                          tip="Edit"
+                          icon={Pencil}
+                          tone="blue"
+                        />
+                        <IconAction
+                          onClick={() => {
+                            setActive.reset();
+                            setPending(coupon);
+                          }}
+                          label={`${coupon.isActive ? 'Pause' : 'Resume'} ${coupon.code}`}
+                          tip={coupon.isActive ? 'Pause' : 'Resume'}
+                          icon={coupon.isActive ? Pause : Play}
+                          tone={coupon.isActive ? 'red' : 'green'}
+                        />
+                        <DeleteButton
+                          label={coupon.code}
+                          disabledReason={
+                            coupon.usedCount > 0
+                              ? 'Used coupons cannot be deleted. Pause it instead.'
+                              : ''
+                          }
+                          onClick={() => {
+                            remove.reset();
+                            setDeleting(coupon);
+                          }}
+                        />
+                      </div>
+                    </Td>
+                  </Tr>
                 );
               })}
             </tbody>
           </table>
         </QueryState>
-      </div>
+      </Card>
 
       {pending && (
         <ConfirmDialog
